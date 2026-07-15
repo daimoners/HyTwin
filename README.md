@@ -297,3 +297,20 @@ Full technical documentation lives in [`docs/`](docs/index.md):
 
 ## Reference
 
+Developed by the **DAIMON Team**, at the **CNR-ISMN** — Consiglio Nazionale
+delle Ricerche, Istituto per lo Studio dei Materiali Nanostrutturati,
+Bologna, Italy.
+
+This project is funded under the Italian **Operational Research Plan
+(POR) "Research and Development on Hydrogen"**, Line 4.1.3, within the
+**MASE-ENEA Program Agreement (AdP H2)**. It is funded by the **European
+Union – NextGenerationEU**, under the **National Recovery and Resilience
+Plan (NRRP)**.
+
+**Contact:** [daimon.team@gmail.com](mailto:daimon.team@gmail.com)
+
+*The views and opinions expressed in this repository are those of the
+authors only and do not necessarily reflect those of the European Union
+or the granting authority. Neither the European Union nor the granting
+authority can be held responsible for them.*
+
