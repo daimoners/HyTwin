@@ -1,0 +1,280 @@
+# HyTwin 2.0 — Italian H2 Network Pilot (multi-site)
+# ==========================================================================
+# A 3-node hydrogen backbone along a South -> North corridor, inspired by the
+# Italian "SoutH2 Corridor" concept:
+#
+#   Foggia (Puglia, producer)  ==H2/elec==>  Napoli (Campania, hub)
+#         ==H2/elec==>  Milano (Lombardia, consumer)
+#
+#   • Foggia  — strong wind + PV, large electrolyzers & storage, small load.
+#               South market zone (cheap renewables).
+#   • Napoli  — balanced mix, pipeline/line junction, medium load.
+#   • Milano  — big industrial load, little local renewable, relies on
+#               imported H2 + national grid. North market zone (pricier).
+#
+# This is a *proposed* pilot: all sites, sizes, coordinates and links are
+# data-driven — replace with real plant data by editing this file only.
+# Link lengths are auto-computed from coordinates unless length_km is given.
+# ==========================================================================
+
+name: "italy_h2_network_pilot"
+start_time: "2024-06-15T00:00:00"
+dt_seconds: 600          # 10-minute steps
+episode_steps: 144       # 24 hours per episode
+
+network:
+
+  # =====================================================================
+  # SITES
+  # =====================================================================
+  sites:
+
+    # -----------------------------------------------------------------
+    # NODE 1 — FOGGIA (Puglia): renewable PRODUCER
+    # -----------------------------------------------------------------
+    - id: foggia
+      location: { name: "Foggia", lat: 41.46, lon: 15.55, alt_m: 76 }
+
+      weather:
+        weibull_k: 2.2
+        weibull_c: 7.6           # windy Apulian plain
+        autocorr_wind: 0.91
+        cloud_cover_mean: 0.26   # sunny south
+        temp_mean_c: 17.5
+        temp_amplitude_c: 12.0
+
+      energy_cost:               # South market zone — cheaper
+        f1_price: 0.24
+        f2_price: 0.16
+        f3_price: 0.08
+        price_volatility: 0.10
+        seasonal_amplitude: 0.20
+        spike_prob_per_day: 0.05
+        spike_multiplier: 3.0
+        spike_duration_steps: 4
+        sell_ratio: 0.30
+
+      grid:
+        wind_turbines:
+          - id: foggia_wt1
+            params: { rotor_diameter_m: 82.0, hub_height_m: 85.0, rated_power_kw: 500.0,
+                      v_cut_in: 3.0, v_rated: 12.0, v_cut_out: 25.0, efficiency_gen: 0.94,
+                      altitude_m: 76.0, turbulence_intensity: 0.07, wake_loss_factor: 0.04 }
+          - id: foggia_wt2
+            params: { rotor_diameter_m: 82.0, hub_height_m: 85.0, rated_power_kw: 500.0,
+                      v_cut_in: 3.0, v_rated: 12.0, v_cut_out: 25.0, efficiency_gen: 0.94,
+                      altitude_m: 76.0, turbulence_intensity: 0.08, wake_loss_factor: 0.05 }
+        pv_arrays:
+          - id: foggia_pv1
+            params: { n_panels: 800, panel_area_m2: 1.96, eta_stc: 0.205, temp_coeff_pmax: -0.0038,
+                      noct_c: 45.0, rated_power_kw: 400.0, soiling_loss: 0.03,
+                      degradation_per_year: 0.005, tilt_deg: 28.0, azimuth_deg: 180.0 }
+        electrolyzers:
+          - id: foggia_el1
+            params: { rated_power_kw: 300.0, n_cells: 100, cell_area_cm2: 400.0,
+                      membrane_resistance_ohm_cm2: 0.16, temperature_c: 65.0,
+                      min_load_fraction: 0.05, ramp_rate_kw_s: 5.0 }
+          - id: foggia_el2
+            params: { rated_power_kw: 300.0, n_cells: 100, cell_area_cm2: 400.0,
+                      membrane_resistance_ohm_cm2: 0.16, temperature_c: 65.0,
+                      min_load_fraction: 0.05, ramp_rate_kw_s: 5.0 }
+        fuel_cells:
+          - id: foggia_fc1
+            params: { rated_power_kw: 150.0, n_cells: 200, cell_area_cm2: 1900.0,
+                      membrane_resistance_ohm_cm2: 0.12, temperature_c: 65.0,
+                      h2_utilisation: 0.80, min_load_fraction: 0.10, ramp_rate_kw_s: 2.0 }
+        hydrogen_tanks:
+          - id: foggia_tk1
+            params: { volume_m3: 12.0, max_pressure_bar: 700.0, min_pressure_bar: 10.0,
+                      initial_soc: 0.50, temperature_c: 20.0, max_charge_rate_kg_s: 0.08,
+                      max_discharge_rate_kg_s: 0.05, boiloff_rate_per_day: 0.0 }
+        loads:
+          - id: foggia_load1
+            params: { base_load_kw: 250.0, profile_type: "commercial",
+                      noise_std_fraction: 0.06, seasonal_amplitude: 0.12,
+                      demand_response_factor: 0.15 }
+        grid_connections:
+          - id: foggia_grid
+            params: { max_import_kw: 500.0, max_export_kw: 300.0, base_availability: 0.98,
+                      outage_mean_h: 2.0, outage_rate_per_day: 0.05, ramp_rate_kw_s: 80.0,
+                      grid_carbon_factor: 0.34 }
+
+      sensors:
+        - { id: foggia_wt1.power, type: power, model_key: "foggia_wt1.power_kw", noise_std_kw: 6.0, drift_rate_kw: 0.1 }
+        - { id: foggia_pv1.power, type: power, model_key: "foggia_pv1.power_ac_kw", noise_std_kw: 3.0 }
+        - { id: foggia_tk1.pressure, type: pressure, model_key: "foggia_tk1.pressure_bar", noise_std_bar: 2.0 }
+        - { id: foggia_load1.power, type: power, model_key: "foggia_load1.load_kw", noise_std_kw: 3.0 }
+
+    # -----------------------------------------------------------------
+    # NODE 2 — NAPOLI (Campania): balancing HUB
+    # -----------------------------------------------------------------
+    - id: napoli
+      location: { name: "Napoli", lat: 40.85, lon: 14.27, alt_m: 17 }
+
+      weather:
+        weibull_k: 2.0
+        weibull_c: 6.4
+        autocorr_wind: 0.90
+        cloud_cover_mean: 0.32
+        temp_mean_c: 17.0
+        temp_amplitude_c: 10.5
+
+      energy_cost:               # Central-South zone
+        f1_price: 0.26
+        f2_price: 0.17
+        f3_price: 0.09
+        price_volatility: 0.11
+        seasonal_amplitude: 0.21
+        spike_prob_per_day: 0.06
+        spike_multiplier: 3.3
+        spike_duration_steps: 4
+        sell_ratio: 0.28
+
+      grid:
+        wind_turbines:
+          - id: napoli_wt1
+            params: { rotor_diameter_m: 77.0, hub_height_m: 80.0, rated_power_kw: 500.0,
+                      v_cut_in: 3.0, v_rated: 12.0, v_cut_out: 25.0, efficiency_gen: 0.94,
+                      altitude_m: 17.0, turbulence_intensity: 0.08, wake_loss_factor: 0.05 }
+        pv_arrays:
+          - id: napoli_pv1
+            params: { n_panels: 500, panel_area_m2: 1.96, eta_stc: 0.205, temp_coeff_pmax: -0.0038,
+                      noct_c: 45.0, rated_power_kw: 250.0, soiling_loss: 0.03,
+                      degradation_per_year: 0.005, tilt_deg: 30.0, azimuth_deg: 180.0 }
+        electrolyzers:
+          - id: napoli_el1
+            params: { rated_power_kw: 200.0, n_cells: 80, cell_area_cm2: 400.0,
+                      membrane_resistance_ohm_cm2: 0.16, temperature_c: 65.0,
+                      min_load_fraction: 0.05, ramp_rate_kw_s: 4.0 }
+        fuel_cells:
+          - id: napoli_fc1
+            params: { rated_power_kw: 200.0, n_cells: 260, cell_area_cm2: 1900.0,
+                      membrane_resistance_ohm_cm2: 0.12, temperature_c: 65.0,
+                      h2_utilisation: 0.80, min_load_fraction: 0.10, ramp_rate_kw_s: 2.0 }
+        hydrogen_tanks:
+          - id: napoli_tk1
+            params: { volume_m3: 10.0, max_pressure_bar: 700.0, min_pressure_bar: 10.0,
+                      initial_soc: 0.45, temperature_c: 20.0, max_charge_rate_kg_s: 0.06,
+                      max_discharge_rate_kg_s: 0.05, boiloff_rate_per_day: 0.0 }
+        loads:
+          - id: napoli_load1
+            params: { base_load_kw: 450.0, profile_type: "commercial",
+                      noise_std_fraction: 0.06, seasonal_amplitude: 0.12,
+                      demand_response_factor: 0.18 }
+        grid_connections:
+          - id: napoli_grid
+            params: { max_import_kw: 700.0, max_export_kw: 200.0, base_availability: 0.97,
+                      outage_mean_h: 2.5, outage_rate_per_day: 0.07, ramp_rate_kw_s: 80.0,
+                      grid_carbon_factor: 0.37 }
+
+      sensors:
+        - { id: napoli_wt1.power, type: power, model_key: "napoli_wt1.power_kw", noise_std_kw: 6.0 }
+        - { id: napoli_tk1.pressure, type: pressure, model_key: "napoli_tk1.pressure_bar", noise_std_bar: 2.0 }
+        - { id: napoli_load1.power, type: power, model_key: "napoli_load1.load_kw", noise_std_kw: 4.0 }
+
+    # -----------------------------------------------------------------
+    # NODE 3 — MILANO (Lombardia): industrial CONSUMER
+    # -----------------------------------------------------------------
+    - id: milano
+      location: { name: "Milano", lat: 45.46, lon: 9.19, alt_m: 120 }
+
+      weather:
+        weibull_k: 1.8
+        weibull_c: 4.8           # low wind in the Po valley
+        autocorr_wind: 0.93
+        cloud_cover_mean: 0.45   # cloudier north
+        temp_mean_c: 14.0
+        temp_amplitude_c: 11.0
+
+      energy_cost:               # North market zone — priciest
+        f1_price: 0.30
+        f2_price: 0.20
+        f3_price: 0.11
+        price_volatility: 0.12
+        seasonal_amplitude: 0.24
+        spike_prob_per_day: 0.07
+        spike_multiplier: 3.6
+        spike_duration_steps: 4
+        sell_ratio: 0.26
+
+      grid:
+        pv_arrays:
+          - id: milano_pv1
+            params: { n_panels: 400, panel_area_m2: 1.96, eta_stc: 0.205, temp_coeff_pmax: -0.0038,
+                      noct_c: 45.0, rated_power_kw: 200.0, soiling_loss: 0.04,
+                      degradation_per_year: 0.005, tilt_deg: 32.0, azimuth_deg: 180.0 }
+        electrolyzers:
+          - id: milano_el1
+            params: { rated_power_kw: 150.0, n_cells: 60, cell_area_cm2: 400.0,
+                      membrane_resistance_ohm_cm2: 0.16, temperature_c: 65.0,
+                      min_load_fraction: 0.05, ramp_rate_kw_s: 4.0 }
+        fuel_cells:
+          - id: milano_fc1
+            params: { rated_power_kw: 300.0, n_cells: 400, cell_area_cm2: 1900.0,
+                      membrane_resistance_ohm_cm2: 0.12, temperature_c: 65.0,
+                      h2_utilisation: 0.80, min_load_fraction: 0.10, ramp_rate_kw_s: 2.5 }
+        hydrogen_tanks:
+          - id: milano_tk1
+            params: { volume_m3: 10.0, max_pressure_bar: 700.0, min_pressure_bar: 10.0,
+                      initial_soc: 0.55, temperature_c: 20.0, max_charge_rate_kg_s: 0.06,
+                      max_discharge_rate_kg_s: 0.06, boiloff_rate_per_day: 0.0 }
+        loads:
+          - id: milano_load1
+            params: { base_load_kw: 800.0, profile_type: "industrial",
+                      noise_std_fraction: 0.05, seasonal_amplitude: 0.10,
+                      demand_response_factor: 0.20 }
+        grid_connections:
+          - id: milano_grid
+            params: { max_import_kw: 1000.0, max_export_kw: 150.0, base_availability: 0.98,
+                      outage_mean_h: 2.0, outage_rate_per_day: 0.04, ramp_rate_kw_s: 100.0,
+                      grid_carbon_factor: 0.41 }
+
+      sensors:
+        - { id: milano_pv1.power, type: power, model_key: "milano_pv1.power_ac_kw", noise_std_kw: 3.0 }
+        - { id: milano_fc1.power, type: power, model_key: "milano_fc1.power_kw", noise_std_kw: 2.0 }
+        - { id: milano_tk1.pressure, type: pressure, model_key: "milano_tk1.pressure_bar", noise_std_bar: 2.0 }
+        - { id: milano_load1.power, type: power, model_key: "milano_load1.load_kw", noise_std_kw: 5.0 }
+
+  # =====================================================================
+  # LINKS  (H2 pipeline + electric line between consecutive nodes)
+  # length_km auto-computed from coordinates if omitted.
+  # =====================================================================
+  links:
+
+    - id: foggia_napoli_h2
+      type: h2_pipeline
+      from: foggia
+      to: napoli
+      params:
+        diameter_m: 0.4
+        max_flow_kg_h: 300.0
+        compressor_spec_kwh_per_kg: 2.0
+        line_pack_capacity_kg: 800.0
+
+    - id: foggia_napoli_elec
+      type: electric_line
+      from: foggia
+      to: napoli
+      params:
+        max_power_mw: 40.0
+        loss_per_1000km: 0.06
+        bidirectional: true
+
+    - id: napoli_milano_h2
+      type: h2_pipeline
+      from: napoli
+      to: milano
+      params:
+        diameter_m: 0.5
+        max_flow_kg_h: 400.0
+        compressor_spec_kwh_per_kg: 2.2
+        line_pack_capacity_kg: 1500.0
+
+    - id: napoli_milano_elec
+      type: electric_line
+      from: napoli
+      to: milano
+      params:
+        max_power_mw: 50.0
+        loss_per_1000km: 0.06
+        bidirectional: true

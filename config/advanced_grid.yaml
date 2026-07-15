@@ -1,0 +1,232 @@
+# HyTwin 2.0 — Advanced Grid Configuration
+# =========================================================
+# Complex pilot: 2×500 kW wind + 2×200 kW PV +
+#                2×200 kW electrolyzer + 1×150 kW fuel cell +
+#                2×8 m³ / 700 bar H2 tanks + 1×500 kW load +
+#                1×800 kW grid connection (non-renewable) +
+#                Italian PUN energy cost model
+# Location: southern Italy, lat 40.5°, lon 14.8°
+# This configuration is used by demo_advanced.py and the dashboard.
+# =========================================================
+
+name: "advanced_h2grid"
+start_time: "2024-06-15T00:00:00"
+dt_seconds: 600          # 10-minute steps
+episode_steps: 144       # 24 hours per episode
+
+grid:
+
+  wind_turbines:
+    - id: wt1
+      params:
+        rotor_diameter_m: 82.0
+        hub_height_m: 85.0
+        rated_power_kw: 500.0
+        v_cut_in: 3.0
+        v_rated: 12.0
+        v_cut_out: 25.0
+        efficiency_gen: 0.94
+        altitude_m: 50.0
+        turbulence_intensity: 0.07
+        wake_loss_factor: 0.04
+    - id: wt2
+      params:
+        rotor_diameter_m: 82.0
+        hub_height_m: 85.0
+        rated_power_kw: 500.0
+        v_cut_in: 3.0
+        v_rated: 12.0
+        v_cut_out: 25.0
+        efficiency_gen: 0.94
+        altitude_m: 50.0
+        turbulence_intensity: 0.08
+        wake_loss_factor: 0.05
+
+  pv_arrays:
+    - id: pv1
+      params:
+        n_panels: 400
+        panel_area_m2: 1.96
+        eta_stc: 0.205
+        temp_coeff_pmax: -0.0038
+        noct_c: 45.0
+        rated_power_kw: 200.0
+        soiling_loss: 0.03
+        degradation_per_year: 0.005
+        tilt_deg: 25.0
+        azimuth_deg: 180.0
+    - id: pv2
+      params:
+        n_panels: 400
+        panel_area_m2: 1.96
+        eta_stc: 0.205
+        temp_coeff_pmax: -0.0038
+        noct_c: 45.0
+        rated_power_kw: 200.0
+        soiling_loss: 0.04
+        degradation_per_year: 0.005
+        tilt_deg: 30.0
+        azimuth_deg: 175.0
+
+  electrolyzers:
+    - id: el1
+      params:
+        rated_power_kw: 200.0
+        n_cells: 80
+        cell_area_cm2: 400.0
+        membrane_resistance_ohm_cm2: 0.16
+        temperature_c: 65.0
+        min_load_fraction: 0.05
+        ramp_rate_kw_s: 4.0
+    - id: el2
+      params:
+        rated_power_kw: 200.0
+        n_cells: 80
+        cell_area_cm2: 400.0
+        membrane_resistance_ohm_cm2: 0.17
+        temperature_c: 65.0
+        min_load_fraction: 0.05
+        ramp_rate_kw_s: 4.0
+
+  fuel_cells:
+    - id: fc1
+      params:
+        rated_power_kw: 150.0
+        n_cells: 200
+        cell_area_cm2: 1900.0
+        membrane_resistance_ohm_cm2: 0.12
+        temperature_c: 65.0
+        h2_utilisation: 0.80
+        min_load_fraction: 0.10
+        ramp_rate_kw_s: 2.0
+
+  hydrogen_tanks:
+    - id: tk1
+      params:
+        volume_m3: 8.0
+        max_pressure_bar: 700.0
+        min_pressure_bar: 10.0
+        initial_soc: 0.40
+        temperature_c: 20.0
+        max_charge_rate_kg_s: 0.06
+        max_discharge_rate_kg_s: 0.04
+        boiloff_rate_per_day: 0.0
+    - id: tk2
+      params:
+        volume_m3: 8.0
+        max_pressure_bar: 700.0
+        min_pressure_bar: 10.0
+        initial_soc: 0.50
+        temperature_c: 20.0
+        max_charge_rate_kg_s: 0.06
+        max_discharge_rate_kg_s: 0.04
+        boiloff_rate_per_day: 0.0
+
+  loads:
+    - id: load1
+      params:
+        base_load_kw: 500.0
+        profile_type: "industrial"
+        noise_std_fraction: 0.06
+        seasonal_amplitude: 0.12
+        demand_response_factor: 0.20
+
+  # Non-renewable grid connection (NEW)
+  grid_connections:
+    - id: grid1
+      params:
+        max_import_kw: 800.0
+        max_export_kw: 200.0
+        base_availability: 0.97
+        outage_mean_h: 2.5
+        outage_rate_per_day: 0.08
+        ramp_rate_kw_s: 80.0
+        grid_carbon_factor: 0.38
+
+# Time-varying energy cost model (Italian PUN, NEW)
+energy_cost:
+  f1_price: 0.28          # peak (Mon-Fri 08:00-19:00)  [€/kWh]
+  f2_price: 0.18          # shoulder                     [€/kWh]
+  f3_price: 0.09          # off-peak (night / Sunday)    [€/kWh]
+  price_volatility: 0.10  # day-ahead market noise
+  seasonal_amplitude: 0.22
+  spike_prob_per_day: 0.06
+  spike_multiplier: 3.5
+  spike_duration_steps: 4
+  sell_ratio: 0.28         # feed-in tariff = buy * sell_ratio
+
+weather:
+  latitude_deg: 40.5
+  longitude_deg: 14.8
+  altitude_m: 50.0
+  weibull_k: 2.1
+  weibull_c: 6.8
+  autocorr_wind: 0.91
+  cloud_cover_mean: 0.32
+  temp_mean_c: 16.0
+  temp_amplitude_c: 11.0
+
+sensors:
+  - id: wt1.power
+    type: power
+    model_key: "wt1.power_kw"
+    noise_std_kw: 6.0
+    drift_rate_kw: 0.1
+
+  - id: wt2.power
+    type: power
+    model_key: "wt2.power_kw"
+    noise_std_kw: 6.0
+    drift_rate_kw: 0.1
+
+  - id: pv1.power
+    type: power
+    model_key: "pv1.power_ac_kw"
+    noise_std_kw: 3.0
+    drift_rate_kw: 0.05
+
+  - id: pv2.power
+    type: power
+    model_key: "pv2.power_ac_kw"
+    noise_std_kw: 3.0
+    drift_rate_kw: 0.05
+
+  - id: el1.power
+    type: power
+    model_key: "el1.power_kw"
+    noise_std_kw: 2.5
+
+  - id: el2.power
+    type: power
+    model_key: "el2.power_kw"
+    noise_std_kw: 2.5
+
+  - id: fc1.power
+    type: power
+    model_key: "fc1.power_kw"
+    noise_std_kw: 1.5
+
+  - id: tk1.pressure
+    type: pressure
+    model_key: "tk1.pressure_bar"
+    noise_std_bar: 2.0
+
+  - id: tk2.pressure
+    type: pressure
+    model_key: "tk2.pressure_bar"
+    noise_std_bar: 2.0
+
+  - id: tk1.h2_level
+    type: h2_level
+    model_key: "tk1.soc"
+    noise_std: 0.005
+
+  - id: tk2.h2_level
+    type: h2_level
+    model_key: "tk2.soc"
+    noise_std: 0.005
+
+  - id: load1.power
+    type: power
+    model_key: "load1.load_kw"
+    noise_std_kw: 4.0

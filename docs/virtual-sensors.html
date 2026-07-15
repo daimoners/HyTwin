@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>4 · Virtual Sensors — HyTwin 2.0</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    MathJax = {
+      tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']], tags: 'ams' },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <img src="../HyTwin_Logo.png" alt="HyTwin logo" class="logo-img">
+    <div class="product">HyTwin 2.0</div>
+    <div class="version">v2.0.0</div>
+    <div class="subtitle">Technical Reference Manual</div>
+  </div>
+  <div class="sidebar-section">Introduction</div>
+  <a href="index.html">Overview</a>
+  <div class="sidebar-section">Chapters</div>
+  <a href="architecture.html">1 · System Architecture</a>
+  <a href="physical-models.html">2 · Physical Models</a>
+  <a href="digital-twin.html">3 · Digital Twin</a>
+  <a href="virtual-sensors.html" class="active">4 · Virtual Sensors</a>
+  <a href="virtual-sensors.html#pipeline" class="sub-link">Sensor Pipeline</a>
+  <a href="virtual-sensors.html#status" class="sub-link">Sensor Status</a>
+  <a href="virtual-sensors.html#types" class="sub-link">Sensor Types</a>
+  <a href="virtual-sensors.html#manager" class="sub-link">SensorManager</a>
+  <a href="virtual-sensors.html#alarms" class="sub-link">Faults → Alarms</a>
+  <a href="network-layer.html">5 · Network Layer</a>
+  <a href="rl-environment.html">6 · Reinforcement Learning</a>
+  <a href="simulation-engine.html">7 · Dashboard</a>
+  <a href="configuration-reference.html">8 · Configuration Reference</a>
+  <a href="usage-guide.html">9 · Usage Guide <span class="start-here">Start here</span></a>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="badge">CHAPTER 4</div>
+    <h1>Virtual Sensors</h1>
+    <p>The noise/drift/delay/quantisation/fault pipeline, quality scoring,
+       and the mapping from raw sensor faults to dashboard alarms.</p>
+  </div>
+
+  <div class="content">
+
+    <h2 id="intro">4.1 Introduction</h2>
+    <p><code>hytwin/sensors/</code> implements a <strong>virtual
+       sensor</strong> layer that mimics real instrumentation: every
+       sensor applies noise, drift, delay, quantisation, and can generate
+       controlled or probabilistic faults.</p>
+    <p>This layer exists to:</p>
+    <ul>
+      <li>Stress-test the model-sensor fusion algorithm in
+          <code>TwinNode</code></li>
+      <li>Train RL agents under realistic, imperfect measurements</li>
+      <li>Validate alarm thresholds and fault-detection logic (see the
+          dashboard's <strong>Events &amp; Alarms</strong> screen,
+          Chapter 7)</li>
+    </ul>
+
+    <h2 id="pipeline">4.2 Sensor Pipeline Architecture</h2>
+    <div class="diagram">
+StateManager          SensorManager
+    │                      │
+    │ reads "node.var"     │ registers / updates
+    ▼                      ▼
+BaseSensor (virtual pipeline)
+    │
+    ▼  stage 1  → Gaussian noise           (noise_std)
+    ▼  stage 2  → calibration drift        (drift_rate, random-walk bias)
+    ▼  stage 3  → measurement delay        (FIFO buffer, delay_steps)
+    ▼  stage 4  → quantisation             (quantisation_step / ADC LSB)
+    ▼  stage 5  → fault injection          (fault_probability, or manual)
+    ▼  stage 6  → quality scoring
+    │
+    ▼
+SensorReading</div>
+
+    <h3><code>BaseSensor.measure()</code> — pipeline in code</h3>
+    <pre><code>def measure(self, true_value: float, timestamp=None) -> SensorReading:
+    self._random_fault_check()          # may set self._fault_mode
+
+    if self._fault_mode == FAULT_OFFLINE:
+        return SensorReading(value=nan, status=FAULT_OFFLINE, quality=0.0, ...)
+    if self._fault_mode == FAULT_STUCK:
+        return SensorReading(value=stuck_value, status=FAULT_STUCK, quality=0.1, ...)
+    if self._fault_mode == FAULT_SPIKE:
+        spike = true_value * (3 + 7 * U(0,1))   # 3-10x outlier, clears after 1 step
+        return SensorReading(value=spike, status=FAULT_SPIKE, quality=0.0, ...)
+
+    v = quantise(delay(drift(noise(true_value))))
+    quality = max(0, 1 - |v - true_value| / (|true_value| + 1e-9))
+    status = OK if quality > 0.9 else DEGRADED
+    return SensorReading(value=v, status=status, quality=quality, ...)</code></pre>
+
+    <h2 id="reading">4.3 SensorReading — Reading Structure</h2>
+    <pre><code>@dataclass
+class SensorReading:
+    sensor_id: str          # e.g. "trapani_wt1.power"
+    sensor_type: str        # e.g. "power", "pressure", "flow"
+    value: float            # measured value (with errors / faults applied)
+    unit: str                # e.g. "kW", "bar", "kg/h"
+    status: SensorStatus     # OK / DEGRADED / FAULT_STUCK / FAULT_SPIKE / FAULT_OFFLINE
+    timestamp: datetime
+    true_value: Optional[float]  # available only in simulation, for diagnostics
+    quality: float           # [0, 1], 1 = perfect</code></pre>
+
+    <h2 id="status">4.4 SensorStatus — Possible States</h2>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Status</th><th>Description</th><th>Typical quality</th></tr></thead>
+      <tbody>
+        <tr><td><code>OK</code></td><td>Sensor operating normally (deviation ≤ 10%)</td><td>&gt; 0.9</td></tr>
+        <tr><td><code>DEGRADED</code></td><td>Reading has drifted from the model estimate but is still numeric</td><td>≤ 0.9</td></tr>
+        <tr><td><code>FAULT_STUCK</code></td><td>Value frozen at its last (or a fixed) sample</td><td>0.1</td></tr>
+        <tr><td><code>FAULT_SPIKE</code></td><td>One-step outlier, 3–10× the true value</td><td>0.0</td></tr>
+        <tr><td><code>FAULT_OFFLINE</code></td><td>No reading available (<code>NaN</code>)</td><td>0.0</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>These five states are exactly what the dashboard's Events &amp;
+       Alarms and Diagnostics screens surface per component (Chapter 7).</p>
+
+    <h2 id="quality">4.5 Quality Scoring</h2>
+    <p>For a normally-operating (non-faulted) sensor, the quality score is
+       a simple relative-error measure against the true value the sensor
+       is measuring:</p>
+    <div class="eq">
+      $$q = \max\!\left(0,\ 1 - \frac{|v - v_{\text{true}}|}{|v_{\text{true}}| + \epsilon}\right)$$
+    </div>
+    <p><code>OK</code> is assigned when $q > 0.9$; otherwise the reading
+       is marked <code>DEGRADED</code>. Faulted readings
+       (<code>FAULT_STUCK</code>, <code>FAULT_SPIKE</code>,
+       <code>FAULT_OFFLINE</code>) receive a fixed low/zero quality
+       (<code>0.1</code>/<code>0.0</code>/<code>0.0</code>) regardless of
+       the raw value, so they are effectively excluded from — or
+       minimally weighted in — the <code>TwinNode</code> fusion step
+       (Chapter 3, §3.4.1).</p>
+
+    <h2 id="faults">4.6 Fault Model</h2>
+    <p>Each sensor has a single tunable
+       <strong><code>fault_probability</code></strong>: the probability,
+       per simulation step, that a random fault is injected. When
+       triggered, the sensor enters <code>FAULT_SPIKE</code> for that
+       reading (a one-step outlier that self-clears), unless a fault has
+       been explicitly injected via <code>inject_fault()</code> with a
+       different mode:</p>
+    <pre><code>sensor.inject_fault(SensorStatus.FAULT_STUCK, stuck_value=312.5)
+sensor.clear_fault()</code></pre>
+    <p><code>FAULT_STUCK</code> and <code>FAULT_OFFLINE</code> persist
+       until explicitly cleared (or, in the SensorManager's own
+       duration-based helper, for a configured number of steps);
+       <code>FAULT_SPIKE</code> always self-clears after one reading.</p>
+    <p>Tuning <code>fault_probability</code> (per site, per sensor) is
+       the mechanism for making a scenario noisier or cleaner — see the
+       Configuration screen in Chapter 7 and the YAML schema in
+       Chapter 8.</p>
+
+    <h2 id="types">4.7 Sensor Types</h2>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Class</th><th>Quantity</th><th>Unit</th><th><code>sensor_type</code></th></tr></thead>
+      <tbody>
+        <tr><td><code>PowerSensor</code></td><td>Active power</td><td>kW</td><td><code>power</code></td></tr>
+        <tr><td><code>VoltageSensor</code></td><td>Stack voltage</td><td>V</td><td><code>voltage</code></td></tr>
+        <tr><td><code>CurrentSensor</code></td><td>Stack current</td><td>A</td><td><code>current</code></td></tr>
+        <tr><td><code>PressureSensor</code></td><td>Tank pressure</td><td>bar</td><td><code>pressure</code></td></tr>
+        <tr><td><code>TemperatureSensor</code></td><td>Temperature</td><td>°C</td><td><code>temperature</code></td></tr>
+        <tr><td><code>FlowSensor</code></td><td>H₂ flow rate</td><td>kg/h</td><td><code>flow</code></td></tr>
+        <tr><td><code>HydrogenLevelSensor</code></td><td>H₂ mass in tank</td><td>kg</td><td><code>h2_level</code></td></tr>
+        <tr><td><code>IrradianceSensor</code></td><td>Solar irradiance</td><td>W/m²</td><td><code>irradiance</code></td></tr>
+        <tr><td><code>WindSpeedSensor</code></td><td>Wind speed</td><td>m/s</td><td><code>wind_speed</code></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>Each concrete class only overrides the default noise/unit
+       parameters; the pipeline itself is entirely inherited from
+       <code>BaseSensor</code>.</p>
+
+    <h2 id="manager">4.8 SensorManager — Centralised Management</h2>
+    <h3>Registering a sensor</h3>
+    <pre><code>sm = SensorManager(state_manager)
+sm.register(PowerSensor(
+    sensor_id="wt1.power",
+    model_key="wt1.power_kw",
+    noise_std=2.5,
+    drift_rate=0.001,
+    fault_probability=0.001,
+))</code></pre>
+    <p><code>model_key</code> is the <code>StateManager</code> key the
+       sensor reads the true value from (e.g.
+       <code>"wt1.power_kw"</code>, or
+       <code>"trapani.trapani_wt1.power_kw"</code> in a network
+       deployment).</p>
+
+    <h3>Per-step update</h3>
+    <pre><code>readings: List[SensorReading] = sm.update(timestamp)</code></pre>
+    <p>Internally, for every registered sensor:</p>
+    <ol>
+      <li>Read <code>true_value = state_manager.get(sensor.model_key,
+          0.0)</code></li>
+      <li>Call <code>sensor.measure(true_value, timestamp)</code></li>
+      <li>Collect the <code>SensorReading</code>s into a list</li>
+    </ol>
+
+    <h3>Direct sensor access</h3>
+    <pre><code>sm.get("wt1.power")   # → SensorReading or None</code></pre>
+
+    <h2 id="testing">4.9 Fault-Injection API for Testing</h2>
+    <pre><code>sm.inject_fault(sensor_id="tk1.pressure", fault_type=SensorStatus.FAULT_STUCK, duration_steps=20)
+sm.clear_fault("tk1.pressure")</code></pre>
+    <p><code>FAULT_SPIKE</code> lasts 1 step; <code>FAULT_STUCK</code>
+       and <code>FAULT_OFFLINE</code> last for
+       <code>duration_steps</code> steps and then auto-clear.</p>
+
+    <h2 id="mapping">4.10 Sensor → Node Mapping</h2>
+    <p>Sensors are associated to nodes via the <code>sensor_id</code>
+       prefix:</p>
+    <pre><code>sensor_id = "wt1.power"
+              └┘
+           prefix = "wt1"  →  TwinNode "wt1"</code></pre>
+    <p><code>GridTwin.step()</code> groups the <code>SensorReading</code>
+       list by prefix and delivers to each node only the readings within
+       its own domain.</p>
+
+    <h3>Example: sensor configuration in YAML</h3>
+    <pre><code>sensors:
+  - id: "wt1.power"
+    type: "PowerSensor"
+    model_key: "wt1.power_kw"
+    noise_std: 2.5
+    drift_rate: 0.001
+    fault_probability: 0.001
+
+  - id: "tk1.pressure"
+    type: "PressureSensor"
+    model_key: "tk1.pressure_bar"
+    noise_std: 1.0
+    quantisation_step: 0.5
+    fault_probability: 0.002</code></pre>
+
+    <h2 id="modelkey">4.11 <code>model_key</code> Convention</h2>
+    <p>For every sensor, <code>model_key</code> must correspond
+       <strong>exactly</strong> to a key written by <code>GridTwin</code>
+       into the <code>StateManager</code>. Standard keys follow:</p>
+    <pre><code>{node_id}.{variable}          # single-site
+{site_id}.{node_id}.{variable}  # network deployment</code></pre>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Node type</th><th>Typical keys</th></tr></thead>
+      <tbody>
+        <tr><td>Wind turbine</td><td><code>power_kw</code>, <code>wind_speed_hub_ms</code>, <code>air_density_kg_m3</code></td></tr>
+        <tr><td>Photovoltaic</td><td><code>power_kw</code>, <code>dc_power_kw</code>, <code>cell_temp_c</code></td></tr>
+        <tr><td>Electrolyzer</td><td><code>power_kw</code>, <code>h2_flow_kg_h</code>, <code>efficiency_hhv</code>, <code>cell_voltage_v</code>, <code>current_a</code></td></tr>
+        <tr><td>Fuel cell</td><td><code>power_kw</code>, <code>h2_consumption_kg_h</code>, <code>efficiency_lhv</code>, <code>voltage_v</code>, <code>current_a</code></td></tr>
+        <tr><td>Hydrogen tank</td><td><code>pressure_bar</code>, <code>soc</code>, <code>h2_mass_kg</code>, <code>temperature_k</code></td></tr>
+        <tr><td>Load</td><td><code>power_kw</code></td></tr>
+        <tr><td>Electric line</td><td><code>power_in_kw</code>, <code>power_out_kw</code>, <code>loss_kw</code>, <code>utilization</code></td></tr>
+        <tr><td>H2 pipeline</td><td><code>flow_kg_h</code>, <code>compressor_power_kw</code>, <code>linepack_kg</code>, <code>delivered_kg_h</code></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h2 id="alarms">4.12 From Raw Sensor Faults to Dashboard Alarms</h2>
+    <p>The sensor layer only produces per-reading
+       <code>SensorReading</code>s with a status and a quality score.
+       Turning that into a legible operator alarm is the digital twin's
+       and dashboard's job, and was specifically redesigned to be
+       actionable (see Chapter 7, Events &amp; Alarms):</p>
+    <ul>
+      <li><code>TwinNode</code> already tracks, per step, the
+          <strong>worst-offending</strong> sensor for that component
+          (<code>fault_key</code>, <code>fault_status</code>,
+          <code>fault_sensor_value</code>, <code>fault_model_value</code>
+          on <code>TwinNodeState</code>, Chapter 3 §3.2.3).</li>
+      <li>The dashboard renders this as a plain-English message naming the
+          specific site + device id + device kind and the fault kind —
+          "outlier spike", "stuck reading (not updating)", "sensor
+          offline (no data)", "reading drifted from model estimate" —
+          with the measured vs. model-expected value where available,
+          instead of a generic "anomaly detected".</li>
+    </ul>
+
+    <h2 id="safety">4.13 Safety and Validation Notes</h2>
+    <ul>
+      <li>Sensors never <strong>write</strong> to the
+          <code>StateManager</code>; reads always flow one-way, model →
+          sensor.</li>
+      <li>The raw sensor value is never exposed directly to the RL
+          estimator or controller: it always passes through
+          <code>TwinNode</code> fusion first.</li>
+      <li>Faults injected via <code>inject_fault</code> are logged at
+          <code>INFO</code> level for traceability during system tests.</li>
+    </ul>
+
+    <div class="page-nav">
+      <a href="digital-twin.html">
+        <div class="nav-label">← Previous</div>
+        <div class="nav-title">3 · Digital Twin</div>
+      </a>
+      <a class="next" href="network-layer.html">
+        <div class="nav-label">Next →</div>
+        <div class="nav-title">5 · Network Layer</div>
+      </a>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>HyTwin 2.0 Technical Reference Manual — Chapter 4</span>
+    <span>H2_POR Pilot Project</span>
+  </footer>
+
+</div>
+</body>
+</html>

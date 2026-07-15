@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>6 · Reinforcement Learning — HyTwin 2.0</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    MathJax = {
+      tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']], tags: 'ams' },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <img src="../HyTwin_Logo.png" alt="HyTwin logo" class="logo-img">
+    <div class="product">HyTwin 2.0</div>
+    <div class="version">v2.0.0</div>
+    <div class="subtitle">Technical Reference Manual</div>
+  </div>
+  <div class="sidebar-section">Introduction</div>
+  <a href="index.html">Overview</a>
+  <div class="sidebar-section">Chapters</div>
+  <a href="architecture.html">1 · System Architecture</a>
+  <a href="physical-models.html">2 · Physical Models</a>
+  <a href="digital-twin.html">3 · Digital Twin</a>
+  <a href="virtual-sensors.html">4 · Virtual Sensors</a>
+  <a href="network-layer.html">5 · Network Layer</a>
+  <a href="rl-environment.html" class="active">6 · Reinforcement Learning</a>
+  <a href="rl-environment.html#single" class="sub-link">H2GridEnv</a>
+  <a href="rl-environment.html#advanced" class="sub-link">AdvancedH2GridEnv</a>
+  <a href="rl-environment.html#network" class="sub-link">NetworkH2GridEnv</a>
+  <a href="rl-environment.html#algos" class="sub-link">Algorithms</a>
+  <a href="rl-environment.html#results" class="sub-link">Interpreting Results</a>
+  <a href="simulation-engine.html">7 · Dashboard</a>
+  <a href="configuration-reference.html">8 · Configuration Reference</a>
+  <a href="usage-guide.html">9 · Usage Guide <span class="start-here">Start here</span></a>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="badge ai">CHAPTER 6 · AI</div>
+    <h1>Reinforcement Learning</h1>
+    <p>Single-site and network Gymnasium environments, reward design, and
+       the shared Stable-Baselines3 training infrastructure.</p>
+  </div>
+
+  <div class="content">
+
+    <p>HyTwin exposes three
+       <a href="https://gymnasium.farama.org/" target="_blank" rel="noopener">Gymnasium</a>-compatible
+       environments, from single-site to full network scale. The
+       <strong>network environment is the primary, recommended path</strong>
+       — see Chapter 5 for the network-specific reward and controller
+       design. This document covers all three, plus the shared
+       Stable-Baselines3 training infrastructure.</p>
+
+    <h2 id="glance">6.1 Environments at a Glance</h2>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Environment</th><th>Scope</th><th>Obs</th><th>Actions</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>H2GridEnv</code></td><td>single site</td><td>14-D</td><td>3-D</td><td>Baseline env (electrolyzer · fuel cell · demand response)</td></tr>
+        <tr><td><code>AdvancedH2GridEnv</code></td><td>single site</td><td>19-D</td><td>4-D</td><td>Adds grid import fraction, price signal, outage flag</td></tr>
+        <tr><td><code>NetworkRLEnv</code> (<code>NetworkH2GridEnv</code>)</td><td>multi-site network</td><td>per-node factored, <code>Box(-2, 2, shape=(obs_dim,))</code></td><td>per-node factored, <code>Box(0, 1, shape=(act_dim,))</code></td><td><code>obs_dim</code>/<code>act_dim</code> scale with site/link count — see Chapter 5 §5.6.2</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><code>hytwin/rl/environment.py</code> → <code>H2GridEnv</code>;
+       <code>hytwin/rl/advanced_environment.py</code> →
+       <code>AdvancedH2GridEnv</code>;
+       <code>hytwin/rl/network_environment.py</code> →
+       <code>NetworkH2GridEnv</code> + <code>NetworkRewardConfig</code>.</p>
+
+    <h2 id="single">6.2 Single-Site: <code>H2GridEnv</code></h2>
+    <h3>Constructor</h3>
+    <pre><code>from hytwin.rl.environment import H2GridEnv
+
+env = H2GridEnv(
+    config_path="config/default_grid.yaml",
+    episode_length=144,     # steps per episode (144 = 24h at 10-min steps)
+    reward_config=None,     # optional RewardConfig
+    render_mode=None,
+)
+obs, info = env.reset(seed=42)</code></pre>
+
+    <h3>Observation space (14-D, normalised to [0,1])</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Idx</th><th>Variable</th><th>Physical range</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td><code>wind_power_norm</code></td><td>0–1000 kW</td><td>sum of wind turbines</td></tr>
+        <tr><td>1</td><td><code>pv_power_norm</code></td><td>0–300 kW</td><td>PV array</td></tr>
+        <tr><td>2</td><td><code>electrolyzer_power_norm</code></td><td>0–300 kW</td><td></td></tr>
+        <tr><td>3</td><td><code>fuel_cell_power_norm</code></td><td>0–150 kW</td><td></td></tr>
+        <tr><td>4</td><td><code>load_norm</code></td><td>0–400 kW</td><td></td></tr>
+        <tr><td>5</td><td><code>h2_soc</code></td><td>0–1</td><td>already normalised</td></tr>
+        <tr><td>6</td><td><code>h2_pressure_norm</code></td><td>0–700 bar</td><td></td></tr>
+        <tr><td>7</td><td><code>grid_exchange_norm</code></td><td>−1000…+1000 kW</td><td>mapped to [0,1]</td></tr>
+        <tr><td>8</td><td><code>renewable_fraction</code></td><td>0–1</td><td>already normalised</td></tr>
+        <tr><td>9</td><td><code>grid_self_sufficiency</code></td><td>0–1</td><td>already normalised</td></tr>
+        <tr><td>10</td><td><code>time_of_day_sin</code></td><td>−1…+1</td><td>mapped to [0,1]</td></tr>
+        <tr><td>11</td><td><code>time_of_day_cos</code></td><td>−1…+1</td><td>mapped to [0,1]</td></tr>
+        <tr><td>12</td><td><code>wind_speed_norm</code></td><td>0–25 m/s</td><td>from WeatherModel</td></tr>
+        <tr><td>13</td><td><code>irradiance_norm</code></td><td>0–1000 W/m²</td><td>GHI</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>Action space (3-D, continuous in [-1, 1])</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Idx</th><th>Action</th><th>Physical mapping</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td><code>el_setpoint</code></td><td>$(a+1)/2 \to [0,1]$ electrolyzer setpoint</td></tr>
+        <tr><td>1</td><td><code>fc_setpoint</code></td><td>$(a+1)/2 \to [0,1]$ fuel-cell setpoint</td></tr>
+        <tr><td>2</td><td><code>dr_fraction</code></td><td>$\max(0,(a+1)/2 \times \text{max\_dr}) \to [0, 0.2]$ demand-response fraction</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>Reward (single-site <code>RewardConfig</code>)</h3>
+    <p>A 7-component weighted sum: renewable fraction, self-sufficiency,
+       H₂ production/consumption balance, component efficiency, H₂ SOC
+       safety (penalises going outside a safe band), demand comfort
+       (unmet-load penalty), and a grid-exchange penalty. See
+       <code>hytwin/rl/rewards.py</code> for exact weights.</p>
+
+    <h3>Episode lifecycle</h3>
+    <div class="diagram">
+env.reset(seed=42)
+   ├── Rebuilds SimulationEngine from YAML
+   ├── Resets WeatherModel, StateManager, TimeSeriesRecorder
+   ├── Samples initial conditions (tank SOC ~ U[0.3, 0.7])
+   └── Returns obs[0], info{}
+
+loop (step in range(episode_length)):
+   env.step(action)
+       ├── Converts action → control_actions
+       ├── Calls engine.step_once() → GridTwin.step() → GridState
+       ├── Computes reward(GridState)
+       ├── Computes obs[t+1]
+       ├── terminated = (step >= episode_length - 1) or (h2_soc < 0.01)
+       └── Returns obs, reward, terminated, truncated, info</div>
+    <p><code>info["reward_components"]</code> exposes the individual
+       weighted terms every step, for debugging and for the dashboard's
+       live objective-term breakdown.</p>
+
+    <h2 id="advanced">6.3 <code>AdvancedH2GridEnv</code></h2>
+    <p>Same structure as <code>H2GridEnv</code>, extended to 19-D
+       observations (adds grid import fraction, the local price signal,
+       and an outage flag) and a 4-D action space (adds explicit
+       grid-import control on top of electrolyzer/fuel-cell/DR). Used by
+       <code>demos/demo_advanced.py --mode train_rl</code>.</p>
+
+    <h2 id="network">6.4 Network: <code>NetworkH2GridEnv</code> / <code>NetworkRLEnv</code></h2>
+    <p>See Chapter 5 §5.6.2–§5.7 for the full design rationale (per-node
+       factored obs/action, and the <code>NetworkRewardConfig</code>
+       reward). In short:</p>
+    <pre><code>from hytwin.simulation.scenario import Scenario
+from hytwin.rl.network_environment import NetworkH2GridEnv, NetworkRewardConfig
+
+topo = Scenario.from_yaml("config/italy_network_large.yaml").topology()
+env = NetworkH2GridEnv(topo, dt_seconds=600.0, episode_steps=144,
+                        reward_config=NetworkRewardConfig())</code></pre>
+    <p><code>observation_space</code> is <code>Box(-2.0, 2.0,
+       shape=(obs_dim,))</code> and <code>action_space</code> is
+       <code>Box(0.0, 1.0, shape=(act_dim,))</code>, where
+       <code>obs_dim</code>/<code>act_dim</code> scale with the number of
+       sites and links in <code>topology</code> — a 7-node/12-link
+       topology like <code>italy_network_large.yaml</code> has a
+       correspondingly larger space than the 3-node
+       <code>italy_network_pilot.yaml</code>.</p>
+
+    <h3>Training from the CLI</h3>
+    <pre><code>python -c "
+from hytwin.simulation.scenario import Scenario
+from hytwin.rl.network_trainer import train_network_agent
+topo = Scenario.from_yaml('config/italy_network_large.yaml').topology()
+train_network_agent(topo, timesteps=200000, save_path='output/rl_models/net_ppo_large',
+                     seed=0, n_steps=576)
+"</code></pre>
+    <p><code>train_network_agent(topology, timesteps, dt_seconds,
+       episode_steps, save_path, seed, n_steps, reward_config, verbose,
+       callback)</code> wraps SB3's PPO with a <code>Monitor</code>
+       wrapper (so per-episode reward/length are tracked in
+       <code>info["episode"]</code>) and saves a <code>.zip</code>
+       loadable by <code>NetworkRLController</code>. The optional
+       <code>callback</code> argument is how the dashboard's AI Training
+       screen reports live progress and can abort a run early (returning
+       <code>False</code> from <code>_on_step</code> stops training) —
+       see Chapter 7.</p>
+    <p>For a real, long training run, prefer the CLI over the dashboard's
+       Training screen, since a CLI run is not tied to the browser
+       session.</p>
+
+    <h2 id="algos">6.5 Algorithms</h2>
+    <ul>
+      <li><strong>PPO</strong> (Stable-Baselines3) — the primary algorithm
+          for both single-site and network environments, and the only one
+          wired into the dashboard's live training and <code>rl</code>
+          controller mode.</li>
+      <li><strong>SAC / TD3 / DDPG</strong> — also available for the
+          single-site environments via <code>RLTrainer</code>
+          (<code>hytwin/rl/trainer.py</code>), for offline
+          experimentation.</li>
+    </ul>
+
+    <h2 id="baseline">6.6 Classical Baseline</h2>
+    <p><code>ClassicalController</code> (single-site) /
+       <code>NetworkClassicalController</code> (network) provide a
+       cost-aware, rule-based dispatch baseline for direct comparison
+       against trained agents — see Chapter 5 §5.6.1 for the
+       network-aware electric-transport-first / green-H₂-first policy,
+       and Chapter 9 for how to run the comparison end to end.</p>
+
+    <h2 id="results">6.7 Interpreting Training Results</h2>
+    <p>There is <strong>no fixed "optimal" reward value</strong> to
+       target — see Chapter 5 §5.7 for why the network reward is an
+       unbounded, episode-condition-dependent weighted sum. The two
+       things that <em>are</em> meaningful:</p>
+    <ol>
+      <li><strong>Relative performance vs. <code>none</code>/<code>classical</code></strong>,
+          computed under the identical reward formula on the same seed
+          (<code>compare_controllers</code>).</li>
+      <li>The <strong>learning curve's smoothed trend</strong> (not its
+          instantaneous value) — the dashboard's AI Training screen plots
+          a smoothed episode-reward curve sourced from SB3's
+          <code>Monitor</code> wrapper's per-episode
+          <code>info["episode"]</code> records; look at whether the
+          trend is rising and flattening, not at any single point on
+          it.</li>
+    </ol>
+    <div class="ai-note">
+      <strong>Single-site reference numbers.</strong> For the legacy
+      single-site <code>H2GridEnv</code>, indicative reference numbers
+      from a short PPO run against a random-action baseline (default
+      single-site config, 20k timesteps) are: mean reward ~506 (random) →
+      ~520 (PPO), mean renewable fraction ~0.42 → ~0.51, mean
+      self-sufficiency ~0.65 → ~0.72, H₂ safety violations ~12% → ~3%.
+      These are illustrative of the single-site environment only — see
+      Chapter 5 §5.6.2 for the corresponding network-scale result (PPO
+      vs. rule-based on the 7-node pilot).
+    </div>
+
+    <div class="page-nav">
+      <a href="network-layer.html">
+        <div class="nav-label">← Previous</div>
+        <div class="nav-title">5 · Network Layer</div>
+      </a>
+      <a class="next" href="simulation-engine.html">
+        <div class="nav-label">Next →</div>
+        <div class="nav-title">7 · Dashboard</div>
+      </a>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>HyTwin 2.0 Technical Reference Manual — Chapter 6</span>
+    <span>H2_POR Pilot Project</span>
+  </footer>
+
+</div>
+</body>
+</html>

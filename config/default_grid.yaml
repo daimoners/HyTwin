@@ -1,0 +1,151 @@
+# HyTwin 2.0 — Default Grid Configuration
+# =========================================================
+# Compact pilot: 2×500 kW wind + 1×300 kW PV +
+#                1×300 kW electrolyzer + 1×150 kW fuel cell +
+#                1×10 m³ / 700 bar tank + 1×400 kW load
+# Location: southern Italy, lat 40.5°, lon 14.8°
+# =========================================================
+
+name: "default_h2grid"
+start_time: "2024-01-15T00:00:00"
+dt_seconds: 600          # 10-minute steps
+episode_steps: 144       # 24 hours
+
+grid:
+
+  wind_turbines:
+    - id: wt1
+      params:
+        rotor_diameter_m: 77.0
+        hub_height_m: 80.0
+        rated_power_kw: 500.0
+        v_cut_in: 3.0
+        v_rated: 12.0
+        v_cut_out: 25.0
+        efficiency_gen: 0.94
+        altitude_m: 50.0
+        turbulence_intensity: 0.06
+    - id: wt2
+      params:
+        rotor_diameter_m: 77.0
+        hub_height_m: 80.0
+        rated_power_kw: 500.0
+        v_cut_in: 3.0
+        v_rated: 12.0
+        v_cut_out: 25.0
+        efficiency_gen: 0.94
+        altitude_m: 50.0
+        turbulence_intensity: 0.07
+
+  pv_arrays:
+    - id: pv1
+      params:
+        n_panels: 600
+        panel_area_m2: 1.96
+        eta_stc: 0.205
+        temp_coeff_pmax: -0.0038
+        noct_c: 45.0
+        rated_power_kw: 300.0
+        soiling_loss: 0.03
+        degradation_per_year: 0.005
+        tilt_deg: 30.0
+        azimuth_deg: 180.0
+
+  electrolyzers:
+    - id: el1
+      params:
+        rated_power_kw: 300.0
+        n_cells: 100
+        cell_area_cm2: 400.0
+        membrane_resistance_ohm_cm2: 0.16
+        temperature_c: 65.0
+        min_load_fraction: 0.05
+        ramp_rate_kw_s: 5.0
+
+  fuel_cells:
+    - id: fc1
+      params:
+        rated_power_kw: 150.0
+        n_cells: 100
+        cell_area_cm2: 300.0
+        membrane_resistance_ohm_cm2: 0.12
+        temperature_c: 65.0
+        h2_utilisation: 0.80
+        min_load_fraction: 0.10
+        ramp_rate_kw_s: 2.0
+
+  hydrogen_tanks:
+    - id: tk1
+      params:
+        volume_m3: 10.0
+        max_pressure_bar: 700.0
+        min_pressure_bar: 10.0
+        initial_soc: 0.50
+        temperature_c: 20.0
+        max_charge_rate_kg_s: 0.08
+        max_discharge_rate_kg_s: 0.05
+        boiloff_rate_per_day: 0.0
+
+  loads:
+    - id: load1
+      params:
+        base_load_kw: 400.0
+        profile_type: "residential"
+        noise_std_fraction: 0.05
+        seasonal_amplitude: 0.10
+        demand_response_factor: 0.15
+
+weather:
+  latitude_deg: 40.5
+  longitude_deg: 14.8
+  altitude_m: 50.0
+  weibull_k: 2.0
+  weibull_c: 6.5
+  autocorr_wind: 0.92
+  cloud_cover_mean: 0.35
+  temp_mean_c: 15.5
+  temp_amplitude_c: 10.0
+
+sensors:
+  - id: wt1.power
+    type: power
+    model_key: "wt1.power_kw"
+    noise_std_kw: 5.0
+    drift_rate_kw: 0.1
+
+  - id: wt2.power
+    type: power
+    model_key: "wt2.power_kw"
+    noise_std_kw: 5.0
+    drift_rate_kw: 0.1
+
+  - id: pv1.power
+    type: power
+    model_key: "pv1.power_ac_kw"
+    noise_std_kw: 3.0
+    drift_rate_kw: 0.05
+
+  - id: el1.power
+    type: power
+    model_key: "el1.power_kw"
+    noise_std_kw: 2.0
+
+  - id: fc1.power
+    type: power
+    model_key: "fc1.power_kw"
+    noise_std_kw: 1.5
+
+  - id: tk1.pressure
+    type: pressure
+    model_key: "tk1.pressure_bar"
+    noise_std_bar: 1.0
+
+  - id: tk1.h2level
+    type: h2_level
+    model_key: "tk1.mass_kg"
+    noise_std_kg: 0.5
+
+  - id: load1.power
+    type: power
+    model_key: "load1.load_kw"
+    noise_std_kw: 2.0

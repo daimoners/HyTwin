@@ -1,0 +1,266 @@
+# HyTwin 2.0 — Advanced Stress-Test Grid Configuration
+# =========================================================
+# Scenario tuned to expose critical operating conditions:
+#   - weaker renewables (wind + PV)
+#   - stronger and more variable demand
+#   - tighter grid import cap + more outages
+#   - volatile energy prices with frequent spikes
+# This scenario is meant for controller comparison:
+#   no control vs classical vs RL.
+# =========================================================
+
+name: "advanced_h2grid_stress"
+start_time: "2024-12-03T00:00:00"
+dt_seconds: 600
+episode_steps: 288
+
+grid:
+
+  wind_turbines:
+    - id: wt1
+      params:
+        rotor_diameter_m: 72.0
+        hub_height_m: 70.0
+        rated_power_kw: 260.0
+        v_cut_in: 3.2
+        v_rated: 12.5
+        v_cut_out: 24.0
+        efficiency_gen: 0.92
+        altitude_m: 50.0
+        turbulence_intensity: 0.10
+        wake_loss_factor: 0.07
+    - id: wt2
+      params:
+        rotor_diameter_m: 72.0
+        hub_height_m: 70.0
+        rated_power_kw: 260.0
+        v_cut_in: 3.2
+        v_rated: 12.5
+        v_cut_out: 24.0
+        efficiency_gen: 0.92
+        altitude_m: 50.0
+        turbulence_intensity: 0.11
+        wake_loss_factor: 0.08
+
+  pv_arrays:
+    - id: pv1
+      params:
+        n_panels: 260
+        panel_area_m2: 1.96
+        eta_stc: 0.198
+        temp_coeff_pmax: -0.0040
+        noct_c: 46.0
+        rated_power_kw: 120.0
+        soiling_loss: 0.06
+        degradation_per_year: 0.008
+        tilt_deg: 22.0
+        azimuth_deg: 180.0
+    - id: pv2
+      params:
+        n_panels: 260
+        panel_area_m2: 1.96
+        eta_stc: 0.198
+        temp_coeff_pmax: -0.0040
+        noct_c: 46.0
+        rated_power_kw: 120.0
+        soiling_loss: 0.07
+        degradation_per_year: 0.008
+        tilt_deg: 28.0
+        azimuth_deg: 170.0
+    - id: pv3
+      params:
+        n_panels: 260
+        panel_area_m2: 1.96
+        eta_stc: 0.198
+        temp_coeff_pmax: -0.0040
+        noct_c: 46.0
+        rated_power_kw: 120.0
+        soiling_loss: 0.06
+        degradation_per_year: 0.008
+        tilt_deg: 24.0
+        azimuth_deg: 185.0
+    - id: pv4
+      params:
+        n_panels: 260
+        panel_area_m2: 1.96
+        eta_stc: 0.198
+        temp_coeff_pmax: -0.0040
+        noct_c: 46.0
+        rated_power_kw: 120.0
+        soiling_loss: 0.07
+        degradation_per_year: 0.008
+        tilt_deg: 30.0
+        azimuth_deg: 165.0
+
+  electrolyzers:
+    - id: el1
+      params:
+        rated_power_kw: 180.0
+        n_cells: 80
+        cell_area_cm2: 400.0
+        membrane_resistance_ohm_cm2: 0.16
+        temperature_c: 65.0
+        min_load_fraction: 0.08
+        ramp_rate_kw_s: 3.0
+    - id: el2
+      params:
+        rated_power_kw: 180.0
+        n_cells: 80
+        cell_area_cm2: 400.0
+        membrane_resistance_ohm_cm2: 0.17
+        temperature_c: 65.0
+        min_load_fraction: 0.08
+        ramp_rate_kw_s: 3.0
+
+  fuel_cells:
+    - id: fc1
+      params:
+        rated_power_kw: 260.0
+        n_cells: 450
+        cell_area_cm2: 1500.0
+        membrane_resistance_ohm_cm2: 0.12
+        temperature_c: 65.0
+        h2_utilisation: 0.82
+        min_load_fraction: 0.10
+        ramp_rate_kw_s: 3.0
+
+  hydrogen_tanks:
+    - id: tk1
+      params:
+        volume_m3: 8.0
+        max_pressure_bar: 700.0
+        min_pressure_bar: 10.0
+        initial_soc: 0.25
+        temperature_c: 20.0
+        max_charge_rate_kg_s: 0.06
+        max_discharge_rate_kg_s: 0.05
+        boiloff_rate_per_day: 0.002
+    - id: tk2
+      params:
+        volume_m3: 8.0
+        max_pressure_bar: 700.0
+        min_pressure_bar: 10.0
+        initial_soc: 0.30
+        temperature_c: 20.0
+        max_charge_rate_kg_s: 0.06
+        max_discharge_rate_kg_s: 0.05
+        boiloff_rate_per_day: 0.002
+
+  loads:
+    - id: load1
+      params:
+        base_load_kw: 760.0
+        profile_type: "industrial"
+        noise_std_fraction: 0.14
+        seasonal_amplitude: 0.24
+        demand_response_factor: 0.30
+
+  grid_connections:
+    - id: grid1
+      params:
+        max_import_kw: 420.0
+        max_export_kw: 80.0
+        base_availability: 0.92
+        outage_mean_h: 3.5
+        outage_rate_per_day: 0.22
+        ramp_rate_kw_s: 40.0
+        grid_carbon_factor: 0.42
+
+energy_cost:
+  f1_price: 0.34
+  f2_price: 0.23
+  f3_price: 0.14
+  price_volatility: 0.18
+  seasonal_amplitude: 0.28
+  spike_prob_per_day: 0.16
+  spike_multiplier: 4.5
+  spike_duration_steps: 6
+  sell_ratio: 0.20
+
+weather:
+  latitude_deg: 40.5
+  longitude_deg: 14.8
+  altitude_m: 50.0
+  weibull_k: 2.0
+  weibull_c: 4.8
+  autocorr_wind: 0.88
+  cloud_cover_mean: 0.58
+  temp_mean_c: 11.0
+  temp_amplitude_c: 9.0
+
+sensors:
+  - id: wt1.power
+    type: power
+    model_key: "wt1.power_kw"
+    noise_std_kw: 8.0
+    drift_rate_kw: 0.2
+
+  - id: wt2.power
+    type: power
+    model_key: "wt2.power_kw"
+    noise_std_kw: 8.0
+    drift_rate_kw: 0.2
+
+  - id: pv1.power
+    type: power
+    model_key: "pv1.power_ac_kw"
+    noise_std_kw: 4.0
+    drift_rate_kw: 0.08
+
+  - id: pv2.power
+    type: power
+    model_key: "pv2.power_ac_kw"
+    noise_std_kw: 4.0
+    drift_rate_kw: 0.08
+
+  - id: pv3.power
+    type: power
+    model_key: "pv3.power_ac_kw"
+    noise_std_kw: 4.0
+    drift_rate_kw: 0.08
+
+  - id: pv4.power
+    type: power
+    model_key: "pv4.power_ac_kw"
+    noise_std_kw: 4.0
+    drift_rate_kw: 0.08
+
+  - id: el1.power
+    type: power
+    model_key: "el1.power_kw"
+    noise_std_kw: 3.0
+
+  - id: el2.power
+    type: power
+    model_key: "el2.power_kw"
+    noise_std_kw: 3.0
+
+  - id: fc1.power
+    type: power
+    model_key: "fc1.power_kw"
+    noise_std_kw: 2.0
+
+  - id: tk1.pressure
+    type: pressure
+    model_key: "tk1.pressure_bar"
+    noise_std_bar: 2.5
+
+  - id: tk2.pressure
+    type: pressure
+    model_key: "tk2.pressure_bar"
+    noise_std_bar: 2.5
+
+  - id: tk1.h2_level
+    type: h2_level
+    model_key: "tk1.soc"
+    noise_std: 0.008
+
+  - id: tk2.h2_level
+    type: h2_level
+    model_key: "tk2.soc"
+    noise_std: 0.008
+
+  - id: load1.power
+    type: power
+    model_key: "load1.load_kw"
+    noise_std_kw: 6.0

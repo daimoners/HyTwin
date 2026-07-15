@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>1 · System Architecture — HyTwin 2.0</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <img src="../HyTwin_Logo.png" alt="HyTwin logo" class="logo-img">
+    <div class="product">HyTwin 2.0</div>
+    <div class="version">v2.0.0</div>
+    <div class="subtitle">Technical Reference Manual</div>
+  </div>
+  <div class="sidebar-section">Introduction</div>
+  <a href="index.html">Overview</a>
+  <div class="sidebar-section">Chapters</div>
+  <a href="architecture.html" class="active">1 · System Architecture</a>
+  <a href="architecture.html#stack" class="sub-link">Layer Stack</a>
+  <a href="architecture.html#layout" class="sub-link">Package Layout</a>
+  <a href="architecture.html#dataflow" class="sub-link">Data Flow</a>
+  <a href="architecture.html#core" class="sub-link">Core Infrastructure</a>
+  <a href="physical-models.html">2 · Physical Models</a>
+  <a href="digital-twin.html">3 · Digital Twin</a>
+  <a href="virtual-sensors.html">4 · Virtual Sensors</a>
+  <a href="network-layer.html">5 · Network Layer</a>
+  <a href="rl-environment.html">6 · Reinforcement Learning</a>
+  <a href="simulation-engine.html">7 · Dashboard</a>
+  <a href="configuration-reference.html">8 · Configuration Reference</a>
+  <a href="usage-guide.html">9 · Usage Guide <span class="start-here">Start here</span></a>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="badge">CHAPTER 1</div>
+    <h1>System Architecture</h1>
+    <p>The layer stack from single-site building blocks up to multi-site
+       network orchestration and control/RL, the package layout, the
+       per-step data flow, and the core infrastructure services.</p>
+  </div>
+
+  <div class="content">
+
+    <h2 id="stack">1.1 Overview</h2>
+    <p>HyTwin 2.0 is structured as a stack of layers, each adding
+       abstraction and intelligence on top of the previous one. Since the
+       introduction of the <strong>network layer</strong>, the stack is best
+       read as single-site building blocks (layers 1–3) topped by a
+       multi-site orchestration layer (layer 4) and a control/RL layer that
+       can target either a single site or the whole network:</p>
+
+    <div class="diagram">
+┌───────────────────────────────────────────────────────────┐
+│  Layer 5 — Control &amp; RL                                    │
+│  ClassicalController / RLController        (single site)   │
+│  NetworkController / NetworkRLController   (multi-site)     │
+│  H2GridEnv / AdvancedH2GridEnv (single) · NetworkRLEnv (N)  │
+├───────────────────────────────────────────────────────────┤
+│  Layer 4 — Network                                          │
+│  NetworkTopology (SiteSpec/LinkSpec) · NetworkTwin           │
+│  NetworkState · dispatch (merit-order) · compare.py          │
+├───────────────────────────────────────────────────────────┤
+│  Layer 3 — Digital Twin                                     │
+│  TwinNode (model-sensor fusion) · GridTwin (site aggregation)│
+├───────────────────────────────────────────────────────────┤
+│  Layer 2 — Virtual Sensors                                  │
+│  BaseSensor pipeline · concrete sensor types · SensorManager │
+├───────────────────────────────────────────────────────────┤
+│  Layer 1 — Physical Models                                  │
+│  WindTurbine · PV · Electrolyzer · FuelCell · HydrogenTank   │
+│  EnergyLoad · GridConnection · EnergyCost                    │
+│  ElectricLine · H2Pipeline  (inter-site links)               │
+├───────────────────────────────────────────────────────────┤
+│  Core Infrastructure                                        │
+│  EventBus · StateManager · SimulationClock                  │
+│  WeatherModel / WeatherField · TimeSeriesRecorder            │
+└───────────────────────────────────────────────────────────┘</div>
+
+    <p>A single-site plant is simply a network with one site and zero
+       links — the <code>GridTwin</code> used at each site is unchanged
+       from the original single-site design, and <code>NetworkTwin</code>
+       reuses it verbatim per site.</p>
+
+    <h2 id="layout">1.2 Package Layout</h2>
+    <pre><code>hytwin/
+├── core/
+│   ├── event_bus.py        # Thread-safe publish/subscribe bus
+│   ├── state_manager.py    # Key-value store with timestamped history
+│   ├── time_engine.py      # SimulationClock (configurable speed)
+│   └── registry.py         # Component registry
+│
+├── models/
+│   ├── base_model.py       # BaseModel + ModelState (dataclass)
+│   ├── wind_turbine.py     # WindTurbineModel
+│   ├── photovoltaic.py     # PhotovoltaicModel
+│   ├── electrolyzer.py     # ElectrolyzerModel (PEM)
+│   ├── fuel_cell.py        # FuelCellModel (PEM)
+│   ├── hydrogen_tank.py    # HydrogenTankModel (Van der Waals)
+│   ├── energy_load.py      # EnergyLoadModel
+│   ├── grid_connection.py  # GridConnectionModel (import/export, outages)
+│   ├── energy_cost.py      # EnergyCostModel (Italian PUN tariff structure)
+│   ├── electric_line.py    # ElectricLineModel (inter-site electric link)
+│   └── h2_pipeline.py      # H2PipelineModel (inter-site H2 pipeline)
+│
+├── sensors/
+│   ├── base_sensor.py      # BaseSensor, SensorReading, SensorStatus
+│   ├── sensors.py          # PowerSensor, PressureSensor, … concrete types
+│   └── sensor_manager.py   # SensorManager (registration + per-step update)
+│
+├── weather/
+│   ├── weather_model.py    # WeatherModel: Weibull wind, solar geometry,
+│   │                       # AR(1) cloud cover / temperature
+│   └── weather_field.py    # WeatherField: couples multiple sites' weather
+│                            # (geographic correlation + shared synoptic AR(1))
+│
+├── digital_twin/
+│   ├── twin_node.py        # TwinNode: one component + sensor fusion
+│   └── grid_twin.py        # GridTwin: single-site orchestration + GridState
+│
+├── network/
+│   ├── topology.py         # SiteSpec, LinkSpec, NetworkTopology
+│   ├── network_twin.py     # NetworkTwin: multi-site orchestrator
+│   ├── network_state.py    # NodeState, LinkFlow, NetworkState (dataclasses)
+│   ├── dispatch.py         # Inter-site dispatch (L1 greedy merit-order)
+│   └── compare.py          # Reproducible controller-comparison harness
+│
+├── rl/
+│   ├── environment.py          # H2GridEnv (single-site, Gymnasium)
+│   ├── advanced_environment.py # AdvancedH2GridEnv (adds grid/price/outage)
+│   ├── network_environment.py  # NetworkRLEnv + NetworkRewardConfig
+│   ├── rewards.py              # RewardConfig + compute_reward() (single-site)
+│   ├── trainer.py              # RLTrainer (Stable-Baselines3 wrapper)
+│   └── network_trainer.py      # train_network_agent() (network PPO trainer)
+│
+├── control/
+│   ├── classical_controller.py # Cost-aware rule-based dispatch (single site)
+│   ├── rl_controller.py        # SB3 policy wrapper (single site)
+│   ├── network_controller.py   # NetworkController (network-aware overlay)
+│   ├── network_rl_controller.py# NetworkRLController (trained policy wrapper)
+│   └── fixed_policy_controller.py
+│
+├── simulation/
+│   ├── engine.py            # SimulationEngine
+│   └── scenario.py          # Scenario (loads YAML, single-site or network:)
+│
+├── data/
+│   └── time_series.py       # TimeSeriesRecorder (memory + CSV streaming)
+│
+├── visualization/
+│   └── plotter.py           # Matplotlib dashboard / sensor comparison plots
+│
+└── dashboard/
+    ├── network_app.py       # FastAPI + WebSocket — Network Control Room
+    ├── app.py                # Legacy single-site dashboard
+    └── static/
+        ├── network.html      # Network Control Room UI
+        └── index.html        # Legacy single-site UI</code></pre>
+
+    <h2 id="dataflow">1.3 Data Flow in a Single Network Step</h2>
+    <div class="diagram">
+WeatherField.step(ts)
+        │ {site_id: weather_dict}
+        ▼
+NetworkTwin.step()
+   │
+   ├─→ [per site]  SiteTwin(=GridTwin).step(dt, weather[site], actions[site])
+   │        │
+   │        ├─ [per component]  Model.step(dt, context) → ModelState
+   │        ├─ TwinNode.update(model_state, sensor_readings) → TwinNodeState
+   │        ├─ StateManager.set("site_id.node_id.key", value)
+   │        └─→ GridState (site-local KPIs, still a residual balance)
+   │
+   ├─→ NetworkDispatch.solve(sites, links, actions)
+   │        • computes each site's net_balance = gen + FC − load − EL
+   │        • routes surplus/deficit across electric &amp; H2 links,
+   │          respecting capacity, resistive/compression losses
+   │        • uncovered residual → that site's own GridConnectionModel
+   │          (import/export) at its own local energy cost / carbon factor
+   │
+   ├─→ NetworkState (per-node NodeState + per-link LinkFlow + system KPIs)
+   │
+   ├─→ TimeSeriesRecorder.record(step, network_state, weather)
+   │
+   └─→ EventBus.publish("network.state", network_state)</div>
+
+    <p>At single-site scale, this collapses to the original
+       <code>GridTwin</code> data flow (<code>WeatherModel → GridTwin →
+       [TwinNode × N]</code>); the network layer only adds the dispatch step
+       and the outer <code>NetworkState</code> aggregation.</p>
+
+    <h2 id="core">1.4 Core Infrastructure</h2>
+
+    <h3>EventBus</h3>
+    <p>Thread-safe publish/subscribe bus. Components publish events on a
+       <em>topic</em> (e.g. <code>"sensor.wt1.power"</code>,
+       <code>"twin.grid_state"</code>, <code>"network.state"</code>) and
+       other components subscribe to them.</p>
+    <pre><code>bus = EventBus()
+bus.subscribe("sensor.*", my_callback)
+bus.publish(Event(topic="sensor.wt1.power", payload=reading, source="wt1"))</code></pre>
+
+    <h3>StateManager</h3>
+    <p>Key-value store with an unbounded (configurable) time history —
+       default 8640 records = 24 h at 10 s resolution. Keys follow the
+       convention:</p>
+    <pre><code>&lt;node_id&gt;.&lt;variable&gt;          # single-site
+&lt;site_id&gt;.&lt;node_id&gt;.&lt;variable&gt; # network (site-qualified)
+# examples:
+"wt1.power_kw"
+"trapani.trapani_wt1.power_kw"
+"tk1.pressure_bar"
+"el1.h2_flow_kg_h"</code></pre>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Method</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>set(key, value, ts)</code></td><td>Update a value with a timestamp</td></tr>
+        <tr><td><code>update(mapping, ts)</code></td><td>Batch update</td></tr>
+        <tr><td><code>get(key)</code> → <code>(ts, value)</code></td><td>Timestamped read</td></tr>
+        <tr><td><code>snapshot(prefix)</code> → <code>dict</code></td><td>Flat snapshot for sensors</td></tr>
+        <tr><td><code>history(key, last=N)</code></td><td>List of <code>(ts, value)</code></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="warning">
+      <strong>Critical note:</strong> <code>StateManager.__len__</code>
+      returns <code>len(_data)</code>, so an empty instance is falsy in
+      Python. Always use <code>if obj is not None:</code> rather than
+      <code>if obj:</code> when checking whether one exists.
+    </div>
+
+    <h3>SimulationClock</h3>
+    <p>Manages simulated time:</p>
+    <pre><code>clock = SimulationClock(start_time=datetime(2024, 6, 15), dt_seconds=600)
+ts = clock.tick()   # advances by dt, returns the new timestamp</code></pre>
+    <p><code>speed_factor=0.0</code> runs the simulation at maximum speed
+       (wall-clock is ignored). Values &gt; 0 slow it down for real-time
+       dashboard playback — this is the <code>--speed-factor</code> flag
+       used by <code>dashboard.network_app</code>.</p>
+
+    <h2 id="deps">1.5 Module Dependencies</h2>
+    <div class="diagram">
+simulation.engine
+    └── network.network_twin          (multi-site)
+            ├── digital_twin.grid_twin   (one instance per site)
+            │       ├── digital_twin.twin_node
+            │       │       ├── models.base_model
+            │       │       └── sensors.base_sensor
+            │       └── models.*
+            ├── network.dispatch
+            ├── network.topology
+            └── core.state_manager
+
+weather.weather_field
+    └── weather.weather_model   (one instance per site, correlated)
+
+sensors.sensor_manager
+    └── sensors.base_sensor
+
+rl.network_environment
+    └── network.network_twin
+
+control.network_controller
+    └── control.classical_controller  (per-site policy, reused)
+
+data.time_series       (standalone)</div>
+
+    <h2 id="engine">1.6 SimulationEngine (Single-Site) and TimeSeriesRecorder</h2>
+    <p>For a single-site scenario, <code>hytwin/simulation/engine.py</code>'s
+       <code>SimulationEngine</code> is the orchestrator (for a network
+       scenario, this role is played by <code>NetworkTwin</code>, §1.3
+       above). Its <code>step_once()</code> cycle:</p>
+    <div class="diagram">
+step_once()
+├── 1. tick clock: t += dt
+├── 2. weather = weather_model.step(t)
+├── 3. control_actions = scenario.get_control_actions(step, t, grid_state)
+├── 4. sensor_readings = sensor_mgr.update(snapshot, t)     (if sensor_mgr is not None)
+├── 5. gs = twin.step(dt, weather, control_actions, sensor_readings, t)
+├── 6. _update_h2_storage(gs)   — charges/discharges tanks from EL/FC flow
+├── 7. recorder.record(step, gs, weather)                    (if recorder is not None)
+├── 8. runs registered step callbacks
+└── 9. returns (gs, ctx)</div>
+
+    <div class="warning">
+      <strong>Guard <code>is not None</code>:</strong> <code>sensor_mgr</code>
+      and <code>recorder</code> are optional components. The guard must be
+      <code>if obj is not None:</code>, never <code>if obj:</code> — both
+      classes implement <code>__len__</code> and are falsy when empty
+      (0 records, 0 sensors), which silently skips their logic if checked
+      the wrong way.
+    </div>
+
+    <p><code>TimeSeriesRecorder</code>
+       (<code>hytwin/data/time_series.py</code>) records every
+       <code>GridState</code> field to an in-memory list (optionally
+       streamed to CSV), and exposes <code>to_dataframe()</code> (pandas),
+       <code>to_json(path)</code>, and <code>summary()</code> — the
+       aggregate KPI dict (<code>mean_renewable_fraction</code>, etc.) used
+       for reporting.</p>
+    <p><code>engine.reset(seed=...)</code> re-seeds the weather model,
+       clears the <code>StateManager</code> and recorder, and resets every
+       <code>TwinNode</code>, so identical <code>(config, seed)</code> pairs
+       reproduce identical runs — the same determinism guarantee that
+       <code>compare_controllers</code> relies on at network scale.</p>
+
+    <h2 id="threads">1.7 Thread-Safety</h2>
+    <ul>
+      <li><code>StateManager</code> uses a <code>threading.RLock</code>
+          around all read/write operations.</li>
+      <li><code>EventBus</code> has an internal lock protecting its
+          subscriber list.</li>
+      <li>Physical models are <strong>not</strong> thread-safe
+          (single-thread by design).</li>
+      <li><code>SimulationEngine</code> / <code>NetworkTwin</code> are
+          single-thread; parallelism happens at the RL episode level via
+          SB3's <code>DummyVecEnv</code> / <code>SubprocVecEnv</code>, and
+          in the dashboard via a background thread for training jobs.</li>
+    </ul>
+
+    <div class="page-nav">
+      <a href="index.html">
+        <div class="nav-label">← Previous</div>
+        <div class="nav-title">Overview</div>
+      </a>
+      <a class="next" href="physical-models.html">
+        <div class="nav-label">Next →</div>
+        <div class="nav-title">2 · Physical Models</div>
+      </a>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>HyTwin 2.0 Technical Reference Manual — Chapter 1</span>
+    <span>H2_POR Pilot Project</span>
+  </footer>
+
+</div>
+</body>
+</html>

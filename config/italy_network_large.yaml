@@ -1,0 +1,201 @@
+# HyTwin 2.0 — Large Realistic Italian H2 Network (7 nodes)
+# ==========================================================================
+# A geographically distributed hydrogen backbone with SPECIALISED nodes —
+# technical infrastructure is placed realistically (producers in the sunny/
+# windy south & islands, consumers in the industrial north), not lumped in one
+# spot.  Each node carries only the equipment that makes sense for its role.
+#
+#   SICILIA   Trapani  — sun+wind PRODUCER (PV, wind, big electrolysis, storage)
+#   SARDEGNA  Cagliari — wind PRODUCER (subsea H2/elec link to the mainland)
+#   PUGLIA    Taranto  — wind+PV PRODUCER / storage HUB (+1 fuel cell)
+#   CAMPANIA  Napoli   — balancing HUB (mixed gen + fuel cells + storage)
+#   LAZIO     Roma     — CONSUMER (large load, fuel cells, little local gen)
+#   EMILIA    Bologna  — transit / CONSUMER
+#   LOMBARDIA Milano   — heavy industrial CONSUMER (huge load, fuel-cell fleet)
+#
+# Everything is data-driven: edit this file to change sites, sizes, links.
+# Link lengths auto-compute from coordinates.  Weather / load / price all vary
+# in time per node (local climatology + market zone).
+# ==========================================================================
+
+name: "italy_h2_network_large"
+start_time: "2024-06-15T00:00:00"
+dt_seconds: 600          # 10-minute steps
+episode_steps: 144
+
+network:
+  sites:
+
+    # ===== SICILIA — Trapani (sun + wind PRODUCER) ==========================
+    - id: trapani
+      location: { name: "Trapani", lat: 37.98, lon: 12.51, alt_m: 20 }
+      weather: { weibull_k: 2.2, weibull_c: 7.2, autocorr_wind: 0.91, cloud_cover_mean: 0.20, temp_mean_c: 19.5, temp_amplitude_c: 11 }
+      energy_cost: { f1_price: 0.23, f2_price: 0.15, f3_price: 0.08, price_volatility: 0.10, seasonal_amplitude: 0.20, spike_prob_per_day: 0.05, spike_multiplier: 3.0, spike_duration_steps: 4, sell_ratio: 0.30 }
+      grid:
+        wind_turbines:
+          - { id: trapani_wt1, params: { rotor_diameter_m: 82, hub_height_m: 85, rated_power_kw: 500, v_cut_in: 3, v_rated: 12, v_cut_out: 25, efficiency_gen: 0.94, altitude_m: 20, turbulence_intensity: 0.07 } }
+          - { id: trapani_wt2, params: { rotor_diameter_m: 82, hub_height_m: 85, rated_power_kw: 500, v_cut_in: 3, v_rated: 12, v_cut_out: 25, efficiency_gen: 0.94, altitude_m: 20, turbulence_intensity: 0.08 } }
+        pv_arrays:
+          - { id: trapani_pv1, params: { n_panels: 600, panel_area_m2: 1.96, eta_stc: 0.205, temp_coeff_pmax: -0.0038, noct_c: 45, rated_power_kw: 300, soiling_loss: 0.03, degradation_per_year: 0.005, tilt_deg: 28, azimuth_deg: 180 } }
+          - { id: trapani_pv2, params: { n_panels: 600, panel_area_m2: 1.96, eta_stc: 0.205, temp_coeff_pmax: -0.0038, noct_c: 45, rated_power_kw: 300, soiling_loss: 0.03, degradation_per_year: 0.005, tilt_deg: 25, azimuth_deg: 175 } }
+          - { id: trapani_pv3, params: { n_panels: 600, panel_area_m2: 1.96, eta_stc: 0.205, temp_coeff_pmax: -0.0038, noct_c: 45, rated_power_kw: 300, soiling_loss: 0.04, degradation_per_year: 0.005, tilt_deg: 30, azimuth_deg: 185 } }
+        electrolyzers:
+          - { id: trapani_el1, params: { rated_power_kw: 300, n_cells: 100, cell_area_cm2: 400, membrane_resistance_ohm_cm2: 0.16, temperature_c: 65, min_load_fraction: 0.05, ramp_rate_kw_s: 5 } }
+          - { id: trapani_el2, params: { rated_power_kw: 300, n_cells: 100, cell_area_cm2: 400, membrane_resistance_ohm_cm2: 0.16, temperature_c: 65, min_load_fraction: 0.05, ramp_rate_kw_s: 5 } }
+          - { id: trapani_el3, params: { rated_power_kw: 300, n_cells: 100, cell_area_cm2: 400, membrane_resistance_ohm_cm2: 0.17, temperature_c: 65, min_load_fraction: 0.05, ramp_rate_kw_s: 5 } }
+        hydrogen_tanks:
+          - { id: trapani_tk1, params: { volume_m3: 14, max_pressure_bar: 700, min_pressure_bar: 10, initial_soc: 0.50, temperature_c: 20, max_charge_rate_kg_s: 0.08, max_discharge_rate_kg_s: 0.05, boiloff_rate_per_day: 0 } }
+          - { id: trapani_tk2, params: { volume_m3: 14, max_pressure_bar: 700, min_pressure_bar: 10, initial_soc: 0.45, temperature_c: 20, max_charge_rate_kg_s: 0.08, max_discharge_rate_kg_s: 0.05, boiloff_rate_per_day: 0 } }
+        loads:
+          - { id: trapani_load, params: { base_load_kw: 150, profile_type: "commercial", noise_std_fraction: 0.06, seasonal_amplitude: 0.12, demand_response_factor: 0.15 } }
+        grid_connections:
+          - { id: trapani_grid, params: { max_import_kw: 400, max_export_kw: 300, base_availability: 0.98, outage_mean_h: 2, outage_rate_per_day: 0.05, ramp_rate_kw_s: 80, grid_carbon_factor: 0.33 } }
+
+    # ===== SARDEGNA — Cagliari (wind PRODUCER) =============================
+    - id: cagliari
+      location: { name: "Cagliari", lat: 39.22, lon: 9.12, alt_m: 8 }
+      weather: { weibull_k: 2.3, weibull_c: 8.0, autocorr_wind: 0.92, cloud_cover_mean: 0.28, temp_mean_c: 18.5, temp_amplitude_c: 10 }
+      energy_cost: { f1_price: 0.24, f2_price: 0.16, f3_price: 0.08, price_volatility: 0.11, seasonal_amplitude: 0.21, spike_prob_per_day: 0.05, spike_multiplier: 3.1, spike_duration_steps: 4, sell_ratio: 0.29 }
+      grid:
+        wind_turbines:
+          - { id: cagliari_wt1, params: { rotor_diameter_m: 90, hub_height_m: 90, rated_power_kw: 600, v_cut_in: 3, v_rated: 12, v_cut_out: 25, efficiency_gen: 0.94, altitude_m: 8, turbulence_intensity: 0.07 } }
+          - { id: cagliari_wt2, params: { rotor_diameter_m: 90, hub_height_m: 90, rated_power_kw: 600, v_cut_in: 3, v_rated: 12, v_cut_out: 25, efficiency_gen: 0.94, altitude_m: 8, turbulence_intensity: 0.08 } }
+          - { id: cagliari_wt3, params: { rotor_diameter_m: 90, hub_height_m: 90, rated_power_kw: 600, v_cut_in: 3, v_rated: 12, v_cut_out: 25, efficiency_gen: 0.94, altitude_m: 8, turbulence_intensity: 0.08 } }
+        pv_arrays:
+          - { id: cagliari_pv1, params: { n_panels: 500, panel_area_m2: 1.96, eta_stc: 0.205, temp_coeff_pmax: -0.0038, noct_c: 45, rated_power_kw: 250, soiling_loss: 0.03, degradation_per_year: 0.005, tilt_deg: 30, azimuth_deg: 180 } }
+        electrolyzers:
+          - { id: cagliari_el1, params: { rated_power_kw: 300, n_cells: 100, cell_area_cm2: 400, membrane_resistance_ohm_cm2: 0.16, temperature_c: 65, min_load_fraction: 0.05, ramp_rate_kw_s: 5 } }
+          - { id: cagliari_el2, params: { rated_power_kw: 300, n_cells: 100, cell_area_cm2: 400, membrane_resistance_ohm_cm2: 0.16, temperature_c: 65, min_load_fraction: 0.05, ramp_rate_kw_s: 5 } }
+        hydrogen_tanks:
+          - { id: cagliari_tk1, params: { volume_m3: 14, max_pressure_bar: 700, min_pressure_bar: 10, initial_soc: 0.55, temperature_c: 20, max_charge_rate_kg_s: 0.08, max_discharge_rate_kg_s: 0.05, boiloff_rate_per_day: 0 } }
+          - { id: cagliari_tk2, params: { volume_m3: 14, max_pressure_bar: 700, min_pressure_bar: 10, initial_soc: 0.50, temperature_c: 20, max_charge_rate_kg_s: 0.08, max_discharge_rate_kg_s: 0.05, boiloff_rate_per_day: 0 } }
+        loads:
+          - { id: cagliari_load, params: { base_load_kw: 120, profile_type: "commercial", noise_std_fraction: 0.06, seasonal_amplitude: 0.12, demand_response_factor: 0.15 } }
+        grid_connections:
+          - { id: cagliari_grid, params: { max_import_kw: 400, max_export_kw: 250, base_availability: 0.97, outage_mean_h: 2.2, outage_rate_per_day: 0.06, ramp_rate_kw_s: 80, grid_carbon_factor: 0.34 } }
+
+    # ===== PUGLIA — Taranto (wind+PV PRODUCER / storage HUB) ===============
+    - id: taranto
+      location: { name: "Taranto", lat: 40.47, lon: 17.24, alt_m: 15 }
+      weather: { weibull_k: 2.1, weibull_c: 7.4, autocorr_wind: 0.91, cloud_cover_mean: 0.26, temp_mean_c: 18, temp_amplitude_c: 11 }
+      energy_cost: { f1_price: 0.25, f2_price: 0.16, f3_price: 0.09, price_volatility: 0.10, seasonal_amplitude: 0.21, spike_prob_per_day: 0.06, spike_multiplier: 3.2, spike_duration_steps: 4, sell_ratio: 0.28 }
+      grid:
+        wind_turbines:
+          - { id: taranto_wt1, params: { rotor_diameter_m: 82, hub_height_m: 85, rated_power_kw: 500, v_cut_in: 3, v_rated: 12, v_cut_out: 25, efficiency_gen: 0.94, altitude_m: 15, turbulence_intensity: 0.07 } }
+          - { id: taranto_wt2, params: { rotor_diameter_m: 82, hub_height_m: 85, rated_power_kw: 500, v_cut_in: 3, v_rated: 12, v_cut_out: 25, efficiency_gen: 0.94, altitude_m: 15, turbulence_intensity: 0.08 } }
+          - { id: taranto_wt3, params: { rotor_diameter_m: 82, hub_height_m: 85, rated_power_kw: 500, v_cut_in: 3, v_rated: 12, v_cut_out: 25, efficiency_gen: 0.94, altitude_m: 15, turbulence_intensity: 0.08 } }
+        pv_arrays:
+          - { id: taranto_pv1, params: { n_panels: 600, panel_area_m2: 1.96, eta_stc: 0.205, temp_coeff_pmax: -0.0038, noct_c: 45, rated_power_kw: 300, soiling_loss: 0.03, degradation_per_year: 0.005, tilt_deg: 28, azimuth_deg: 180 } }
+          - { id: taranto_pv2, params: { n_panels: 600, panel_area_m2: 1.96, eta_stc: 0.205, temp_coeff_pmax: -0.0038, noct_c: 45, rated_power_kw: 300, soiling_loss: 0.04, degradation_per_year: 0.005, tilt_deg: 25, azimuth_deg: 175 } }
+        electrolyzers:
+          - { id: taranto_el1, params: { rated_power_kw: 300, n_cells: 100, cell_area_cm2: 400, membrane_resistance_ohm_cm2: 0.16, temperature_c: 65, min_load_fraction: 0.05, ramp_rate_kw_s: 5 } }
+          - { id: taranto_el2, params: { rated_power_kw: 300, n_cells: 100, cell_area_cm2: 400, membrane_resistance_ohm_cm2: 0.16, temperature_c: 65, min_load_fraction: 0.05, ramp_rate_kw_s: 5 } }
+          - { id: taranto_el3, params: { rated_power_kw: 300, n_cells: 100, cell_area_cm2: 400, membrane_resistance_ohm_cm2: 0.17, temperature_c: 65, min_load_fraction: 0.05, ramp_rate_kw_s: 5 } }
+        fuel_cells:
+          - { id: taranto_fc1, params: { rated_power_kw: 200, n_cells: 260, cell_area_cm2: 1900, membrane_resistance_ohm_cm2: 0.12, temperature_c: 65, h2_utilisation: 0.80, min_load_fraction: 0.10, ramp_rate_kw_s: 2 } }
+        hydrogen_tanks:
+          - { id: taranto_tk1, params: { volume_m3: 16, max_pressure_bar: 700, min_pressure_bar: 10, initial_soc: 0.50, temperature_c: 20, max_charge_rate_kg_s: 0.09, max_discharge_rate_kg_s: 0.06, boiloff_rate_per_day: 0 } }
+          - { id: taranto_tk2, params: { volume_m3: 16, max_pressure_bar: 700, min_pressure_bar: 10, initial_soc: 0.45, temperature_c: 20, max_charge_rate_kg_s: 0.09, max_discharge_rate_kg_s: 0.06, boiloff_rate_per_day: 0 } }
+        loads:
+          - { id: taranto_load, params: { base_load_kw: 300, profile_type: "industrial", noise_std_fraction: 0.05, seasonal_amplitude: 0.10, demand_response_factor: 0.18 } }
+        grid_connections:
+          - { id: taranto_grid, params: { max_import_kw: 600, max_export_kw: 250, base_availability: 0.97, outage_mean_h: 2.4, outage_rate_per_day: 0.06, ramp_rate_kw_s: 90, grid_carbon_factor: 0.36 } }
+
+    # ===== CAMPANIA — Napoli (balancing HUB) ==============================
+    - id: napoli
+      location: { name: "Napoli", lat: 40.85, lon: 14.27, alt_m: 17 }
+      weather: { weibull_k: 2.0, weibull_c: 6.2, autocorr_wind: 0.90, cloud_cover_mean: 0.32, temp_mean_c: 17.5, temp_amplitude_c: 10 }
+      energy_cost: { f1_price: 0.26, f2_price: 0.17, f3_price: 0.09, price_volatility: 0.11, seasonal_amplitude: 0.21, spike_prob_per_day: 0.06, spike_multiplier: 3.3, spike_duration_steps: 4, sell_ratio: 0.28 }
+      grid:
+        wind_turbines:
+          - { id: napoli_wt1, params: { rotor_diameter_m: 77, hub_height_m: 80, rated_power_kw: 500, v_cut_in: 3, v_rated: 12, v_cut_out: 25, efficiency_gen: 0.94, altitude_m: 17, turbulence_intensity: 0.08 } }
+        pv_arrays:
+          - { id: napoli_pv1, params: { n_panels: 500, panel_area_m2: 1.96, eta_stc: 0.205, temp_coeff_pmax: -0.0038, noct_c: 45, rated_power_kw: 250, soiling_loss: 0.03, degradation_per_year: 0.005, tilt_deg: 30, azimuth_deg: 180 } }
+        electrolyzers:
+          - { id: napoli_el1, params: { rated_power_kw: 200, n_cells: 80, cell_area_cm2: 400, membrane_resistance_ohm_cm2: 0.16, temperature_c: 65, min_load_fraction: 0.05, ramp_rate_kw_s: 4 } }
+        fuel_cells:
+          - { id: napoli_fc1, params: { rated_power_kw: 200, n_cells: 260, cell_area_cm2: 1900, membrane_resistance_ohm_cm2: 0.12, temperature_c: 65, h2_utilisation: 0.80, min_load_fraction: 0.10, ramp_rate_kw_s: 2 } }
+          - { id: napoli_fc2, params: { rated_power_kw: 200, n_cells: 260, cell_area_cm2: 1900, membrane_resistance_ohm_cm2: 0.12, temperature_c: 65, h2_utilisation: 0.80, min_load_fraction: 0.10, ramp_rate_kw_s: 2 } }
+        hydrogen_tanks:
+          - { id: napoli_tk1, params: { volume_m3: 12, max_pressure_bar: 700, min_pressure_bar: 10, initial_soc: 0.45, temperature_c: 20, max_charge_rate_kg_s: 0.06, max_discharge_rate_kg_s: 0.05, boiloff_rate_per_day: 0 } }
+          - { id: napoli_tk2, params: { volume_m3: 12, max_pressure_bar: 700, min_pressure_bar: 10, initial_soc: 0.50, temperature_c: 20, max_charge_rate_kg_s: 0.06, max_discharge_rate_kg_s: 0.05, boiloff_rate_per_day: 0 } }
+        loads:
+          - { id: napoli_load, params: { base_load_kw: 450, profile_type: "commercial", noise_std_fraction: 0.06, seasonal_amplitude: 0.12, demand_response_factor: 0.18 } }
+        grid_connections:
+          - { id: napoli_grid, params: { max_import_kw: 700, max_export_kw: 200, base_availability: 0.97, outage_mean_h: 2.5, outage_rate_per_day: 0.07, ramp_rate_kw_s: 90, grid_carbon_factor: 0.37 } }
+
+    # ===== LAZIO — Roma (CONSUMER) ========================================
+    - id: roma
+      location: { name: "Roma", lat: 41.90, lon: 12.50, alt_m: 21 }
+      weather: { weibull_k: 1.9, weibull_c: 5.6, autocorr_wind: 0.91, cloud_cover_mean: 0.34, temp_mean_c: 17, temp_amplitude_c: 11 }
+      energy_cost: { f1_price: 0.27, f2_price: 0.18, f3_price: 0.10, price_volatility: 0.11, seasonal_amplitude: 0.22, spike_prob_per_day: 0.06, spike_multiplier: 3.4, spike_duration_steps: 4, sell_ratio: 0.27 }
+      grid:
+        pv_arrays:
+          - { id: roma_pv1, params: { n_panels: 500, panel_area_m2: 1.96, eta_stc: 0.205, temp_coeff_pmax: -0.0038, noct_c: 45, rated_power_kw: 250, soiling_loss: 0.03, degradation_per_year: 0.005, tilt_deg: 30, azimuth_deg: 180 } }
+        fuel_cells:
+          - { id: roma_fc1, params: { rated_power_kw: 250, n_cells: 330, cell_area_cm2: 1900, membrane_resistance_ohm_cm2: 0.12, temperature_c: 65, h2_utilisation: 0.80, min_load_fraction: 0.10, ramp_rate_kw_s: 2.5 } }
+          - { id: roma_fc2, params: { rated_power_kw: 250, n_cells: 330, cell_area_cm2: 1900, membrane_resistance_ohm_cm2: 0.12, temperature_c: 65, h2_utilisation: 0.80, min_load_fraction: 0.10, ramp_rate_kw_s: 2.5 } }
+        hydrogen_tanks:
+          - { id: roma_tk1, params: { volume_m3: 12, max_pressure_bar: 700, min_pressure_bar: 10, initial_soc: 0.55, temperature_c: 20, max_charge_rate_kg_s: 0.06, max_discharge_rate_kg_s: 0.06, boiloff_rate_per_day: 0 } }
+          - { id: roma_tk2, params: { volume_m3: 12, max_pressure_bar: 700, min_pressure_bar: 10, initial_soc: 0.50, temperature_c: 20, max_charge_rate_kg_s: 0.06, max_discharge_rate_kg_s: 0.06, boiloff_rate_per_day: 0 } }
+        loads:
+          - { id: roma_load, params: { base_load_kw: 650, profile_type: "commercial", noise_std_fraction: 0.06, seasonal_amplitude: 0.13, demand_response_factor: 0.20 } }
+        grid_connections:
+          - { id: roma_grid, params: { max_import_kw: 900, max_export_kw: 150, base_availability: 0.98, outage_mean_h: 2, outage_rate_per_day: 0.05, ramp_rate_kw_s: 100, grid_carbon_factor: 0.39 } }
+
+    # ===== EMILIA — Bologna (transit / CONSUMER) ==========================
+    - id: bologna
+      location: { name: "Bologna", lat: 44.49, lon: 11.34, alt_m: 54 }
+      weather: { weibull_k: 1.8, weibull_c: 5.0, autocorr_wind: 0.92, cloud_cover_mean: 0.42, temp_mean_c: 15, temp_amplitude_c: 11 }
+      energy_cost: { f1_price: 0.29, f2_price: 0.19, f3_price: 0.11, price_volatility: 0.12, seasonal_amplitude: 0.23, spike_prob_per_day: 0.07, spike_multiplier: 3.5, spike_duration_steps: 4, sell_ratio: 0.26 }
+      grid:
+        pv_arrays:
+          - { id: bologna_pv1, params: { n_panels: 400, panel_area_m2: 1.96, eta_stc: 0.205, temp_coeff_pmax: -0.0038, noct_c: 45, rated_power_kw: 200, soiling_loss: 0.04, degradation_per_year: 0.005, tilt_deg: 32, azimuth_deg: 180 } }
+        fuel_cells:
+          - { id: bologna_fc1, params: { rated_power_kw: 250, n_cells: 330, cell_area_cm2: 1900, membrane_resistance_ohm_cm2: 0.12, temperature_c: 65, h2_utilisation: 0.80, min_load_fraction: 0.10, ramp_rate_kw_s: 2.5 } }
+        hydrogen_tanks:
+          - { id: bologna_tk1, params: { volume_m3: 12, max_pressure_bar: 700, min_pressure_bar: 10, initial_soc: 0.50, temperature_c: 20, max_charge_rate_kg_s: 0.06, max_discharge_rate_kg_s: 0.06, boiloff_rate_per_day: 0 } }
+        loads:
+          - { id: bologna_load, params: { base_load_kw: 500, profile_type: "industrial", noise_std_fraction: 0.05, seasonal_amplitude: 0.10, demand_response_factor: 0.20 } }
+        grid_connections:
+          - { id: bologna_grid, params: { max_import_kw: 800, max_export_kw: 150, base_availability: 0.98, outage_mean_h: 2, outage_rate_per_day: 0.04, ramp_rate_kw_s: 100, grid_carbon_factor: 0.41 } }
+
+    # ===== LOMBARDIA — Milano (heavy industrial CONSUMER) =================
+    - id: milano
+      location: { name: "Milano", lat: 45.46, lon: 9.19, alt_m: 120 }
+      weather: { weibull_k: 1.8, weibull_c: 4.6, autocorr_wind: 0.93, cloud_cover_mean: 0.46, temp_mean_c: 14, temp_amplitude_c: 11 }
+      energy_cost: { f1_price: 0.30, f2_price: 0.20, f3_price: 0.11, price_volatility: 0.12, seasonal_amplitude: 0.24, spike_prob_per_day: 0.07, spike_multiplier: 3.6, spike_duration_steps: 4, sell_ratio: 0.26 }
+      grid:
+        pv_arrays:
+          - { id: milano_pv1, params: { n_panels: 400, panel_area_m2: 1.96, eta_stc: 0.205, temp_coeff_pmax: -0.0038, noct_c: 45, rated_power_kw: 200, soiling_loss: 0.04, degradation_per_year: 0.005, tilt_deg: 32, azimuth_deg: 180 } }
+        fuel_cells:
+          - { id: milano_fc1, params: { rated_power_kw: 250, n_cells: 330, cell_area_cm2: 1900, membrane_resistance_ohm_cm2: 0.12, temperature_c: 65, h2_utilisation: 0.80, min_load_fraction: 0.10, ramp_rate_kw_s: 2.5 } }
+          - { id: milano_fc2, params: { rated_power_kw: 250, n_cells: 330, cell_area_cm2: 1900, membrane_resistance_ohm_cm2: 0.12, temperature_c: 65, h2_utilisation: 0.80, min_load_fraction: 0.10, ramp_rate_kw_s: 2.5 } }
+          - { id: milano_fc3, params: { rated_power_kw: 250, n_cells: 330, cell_area_cm2: 1900, membrane_resistance_ohm_cm2: 0.12, temperature_c: 65, h2_utilisation: 0.80, min_load_fraction: 0.10, ramp_rate_kw_s: 2.5 } }
+        hydrogen_tanks:
+          - { id: milano_tk1, params: { volume_m3: 14, max_pressure_bar: 700, min_pressure_bar: 10, initial_soc: 0.55, temperature_c: 20, max_charge_rate_kg_s: 0.07, max_discharge_rate_kg_s: 0.07, boiloff_rate_per_day: 0 } }
+          - { id: milano_tk2, params: { volume_m3: 14, max_pressure_bar: 700, min_pressure_bar: 10, initial_soc: 0.50, temperature_c: 20, max_charge_rate_kg_s: 0.07, max_discharge_rate_kg_s: 0.07, boiloff_rate_per_day: 0 } }
+        loads:
+          - { id: milano_load, params: { base_load_kw: 900, profile_type: "industrial", noise_std_fraction: 0.05, seasonal_amplitude: 0.10, demand_response_factor: 0.20 } }
+        grid_connections:
+          - { id: milano_grid, params: { max_import_kw: 1100, max_export_kw: 150, base_availability: 0.98, outage_mean_h: 2, outage_rate_per_day: 0.04, ramp_rate_kw_s: 110, grid_carbon_factor: 0.42 } }
+
+  # ===== LINKS (H2 pipeline backbone + electric mesh) =====================
+  links:
+    # Sicily -> mainland (Messina)
+    - { id: trapani_napoli_h2,   type: h2_pipeline,   from: trapani,  to: napoli,  params: { diameter_m: 0.4, max_flow_kg_h: 300, compressor_spec_kwh_per_kg: 2.2, line_pack_capacity_kg: 1000 } }
+    - { id: trapani_napoli_elec, type: electric_line, from: trapani,  to: napoli,  params: { max_power_mw: 40, loss_per_1000km: 0.06, bidirectional: true } }
+    # Sardinia -> Lazio (subsea)
+    - { id: cagliari_roma_h2,    type: h2_pipeline,   from: cagliari, to: roma,    params: { diameter_m: 0.4, max_flow_kg_h: 280, compressor_spec_kwh_per_kg: 2.4, line_pack_capacity_kg: 1200 } }
+    - { id: cagliari_roma_elec,  type: electric_line, from: cagliari, to: roma,    params: { max_power_mw: 35, loss_per_1000km: 0.07, bidirectional: true } }
+    # Puglia backbone
+    - { id: taranto_napoli_h2,   type: h2_pipeline,   from: taranto,  to: napoli,  params: { diameter_m: 0.5, max_flow_kg_h: 400, compressor_spec_kwh_per_kg: 2.0, line_pack_capacity_kg: 1000 } }
+    - { id: taranto_napoli_elec, type: electric_line, from: taranto,  to: napoli,  params: { max_power_mw: 45, loss_per_1000km: 0.06, bidirectional: true } }
+    - { id: taranto_bologna_elec,type: electric_line, from: taranto,  to: bologna, params: { max_power_mw: 40, loss_per_1000km: 0.06, bidirectional: true } }
+    # Tyrrhenian corridor North
+    - { id: napoli_roma_h2,      type: h2_pipeline,   from: napoli,   to: roma,    params: { diameter_m: 0.5, max_flow_kg_h: 400, compressor_spec_kwh_per_kg: 2.1, line_pack_capacity_kg: 1200 } }
+    - { id: napoli_roma_elec,    type: electric_line, from: napoli,   to: roma,    params: { max_power_mw: 50, loss_per_1000km: 0.06, bidirectional: true } }
+    - { id: roma_bologna_h2,     type: h2_pipeline,   from: roma,     to: bologna, params: { diameter_m: 0.5, max_flow_kg_h: 450, compressor_spec_kwh_per_kg: 2.2, line_pack_capacity_kg: 1500 } }
+    - { id: roma_bologna_elec,   type: electric_line, from: roma,     to: bologna, params: { max_power_mw: 55, loss_per_1000km: 0.06, bidirectional: true } }
+    - { id: bologna_milano_h2,   type: h2_pipeline,   from: bologna,  to: milano,  params: { diameter_m: 0.5, max_flow_kg_h: 450, compressor_spec_kwh_per_kg: 2.2, line_pack_capacity_kg: 1500 } }
+    - { id: bologna_milano_elec, type: electric_line, from: bologna,  to: milano,  params: { max_power_mw: 60, loss_per_1000km: 0.06, bidirectional: true } }

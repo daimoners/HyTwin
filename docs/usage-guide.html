@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>9 · Usage Guide — HyTwin 2.0</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <img src="../HyTwin_Logo.png" alt="HyTwin logo" class="logo-img">
+    <div class="product">HyTwin 2.0</div>
+    <div class="version">v2.0.0</div>
+    <div class="subtitle">Technical Reference Manual</div>
+  </div>
+  <div class="sidebar-section">Introduction</div>
+  <a href="index.html">Overview</a>
+  <div class="sidebar-section">Chapters</div>
+  <a href="architecture.html">1 · System Architecture</a>
+  <a href="physical-models.html">2 · Physical Models</a>
+  <a href="digital-twin.html">3 · Digital Twin</a>
+  <a href="virtual-sensors.html">4 · Virtual Sensors</a>
+  <a href="network-layer.html">5 · Network Layer</a>
+  <a href="rl-environment.html">6 · Reinforcement Learning</a>
+  <a href="simulation-engine.html">7 · Dashboard</a>
+  <a href="configuration-reference.html">8 · Configuration Reference</a>
+  <a href="usage-guide.html" class="active">9 · Usage Guide <span class="start-here">Start here</span></a>
+  <a href="usage-guide.html#run" class="sub-link">Run a Simulation</a>
+  <a href="usage-guide.html#train" class="sub-link">Train an AI Agent</a>
+  <a href="usage-guide.html#compare" class="sub-link">Compare Controllers</a>
+  <a href="usage-guide.html#vary" class="sub-link">Varying Conditions</a>
+  <a href="usage-guide.html#results" class="sub-link">Interpreting Results</a>
+  <a href="usage-guide.html#tests" class="sub-link">Test Suite</a>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="badge ai">CHAPTER 9 · START HERE</div>
+    <h1>How to Use HyTwin</h1>
+    <p>The practical, task-oriented companion to the rest of the docs —
+       copy-pasteable commands and UI steps for the dashboard and CLI
+       paths to running a network simulation, training an AI agent,
+       comparing traditional vs. AI control, and interpreting the
+       results.</p>
+  </div>
+
+  <div class="content">
+
+    <p>This covers, with copy-pasteable commands and UI steps, both the
+       <strong>dashboard</strong> and the <strong>CLI</strong> paths for
+       the four things you'll actually want to do: run a network
+       simulation, train an AI agent, compare traditional vs. AI control,
+       and interpret the results — including how to vary time horizon,
+       seed, and network configuration along the way.</p>
+    <p>All CLI snippets below are run from the repository root
+       (<code>/home/merc/PROJECTS/H2_POR/HYTWIN/2.0</code>), with the
+       project's virtual environment active.</p>
+
+    <h2 id="run">9.1 Running a Network Simulation</h2>
+    <h3>Dashboard</h3>
+    <pre><code>python -m dashboard.network_app --speed-factor 30
+# then open http://localhost:8060</code></pre>
+    <p>The simulation is <strong>built but paused</strong> on launch.
+       Press <strong>Start</strong> in the sidebar to start the clock.
+       The <strong>Overview</strong> screen shows live KPI tiles;
+       <strong>Network &amp; Map</strong> shows the animated topology;
+       <strong>Analytics &amp; KPIs</strong> shows time-series charts as
+       the run progresses.</p>
+
+    <h3>CLI</h3>
+    <p>There's no dedicated "just simulate and watch" CLI entry point
+       for the network layer — the CLI path for running a network
+       scenario is through <code>compare_controllers</code> (§9.3 below)
+       or by driving <code>NetworkTwin</code> directly in a script, e.g.:</p>
+    <pre><code>from datetime import datetime
+from hytwin.simulation.scenario import Scenario
+from hytwin.network.network_twin import NetworkTwin
+
+topo = Scenario.from_yaml("config/italy_network_large.yaml").topology()
+twin = NetworkTwin(topo, dt_seconds=600.0)
+state = twin.reset(start_time=datetime(2024, 6, 15), seed=42)
+for i in range(144):   # 24 hours at dt=600s
+    state = twin.step()
+    print(state.timestamp, state.total_load_kw, state.total_renewable_kw)</code></pre>
+    <p>For a quick sanity check without writing a script, use the
+       comparison harness with a single strategy (§9.3) — it prints KPIs
+       after running the network for the requested number of steps.</p>
+
+    <h2 id="train">9.2 Training an AI (RL) Agent</h2>
+    <div class="ai-note">
+      <strong>AI-related section.</strong> This trains a PPO agent to
+      control the network — see Chapter 6 for the environment/reward
+      design behind these commands.
+    </div>
+
+    <h3>Dashboard — AI Training screen</h3>
+    <ol>
+      <li>Go to <strong>AI Training</strong> in the sidebar.</li>
+      <li>Set <code>timesteps</code>, <code>n_steps</code> (rollout
+          size), and <code>seed</code>; optionally name the run.</li>
+      <li>Press start — the job runs in a background thread on the
+          server. Watch live progress, ETA, and the smoothed
+          learning-curve chart.</li>
+      <li>When it completes, open the model list and activate it as the
+          live <code>rl</code> controller (no dashboard restart needed)
+          — the model/topology compatibility check runs automatically
+          and blocks activation with a clear error if the model was
+          trained on a different network.</li>
+    </ol>
+    <p>This is convenient for short/exploratory runs, but a
+       dashboard-launched job still runs on the server process, not the
+       browser tab — for a long, unattended training run, prefer the
+       CLI:</p>
+
+    <h3>CLI — recommended for real training runs</h3>
+    <pre><code>python -c "
+from hytwin.simulation.scenario import Scenario
+from hytwin.rl.network_trainer import train_network_agent
+topo = Scenario.from_yaml('config/italy_network_large.yaml').topology()
+train_network_agent(topo, timesteps=200000, save_path='output/rl_models/net_ppo_large',
+                     seed=0, n_steps=576)
+"</code></pre>
+    <p>This overwrites <code>output/rl_models/net_ppo_large.zip</code>,
+       which is the network dashboard's default <code>rl</code> model
+       (<code>--rl-model</code> flag). To train a <strong>named
+       variant</strong> instead — kept alongside the existing one,
+       selectable from the dashboard's model list without overwriting
+       anything — just change <code>save_path</code> and
+       <code>seed</code>:</p>
+    <pre><code>python -c "
+from hytwin.simulation.scenario import Scenario
+from hytwin.rl.network_trainer import train_network_agent
+topo = Scenario.from_yaml('config/italy_network_large.yaml').topology()
+train_network_agent(topo, timesteps=200000,
+                     save_path='output/rl_models/net_ppo_v3', seed=1, n_steps=576)
+"</code></pre>
+
+    <h2 id="compare">9.3 Running a Traditional-vs-AI Comparison</h2>
+    <h3>Dashboard — Scenario Comparison screen</h3>
+    <ul>
+      <li><strong>Batch comparison</strong>: pick 2–3 controllers
+          (<code>none</code>/<code>classical</code>/<code>rl</code>),
+          press run — a one-shot comparison over a configurable
+          horizon, with side-by-side KPIs.</li>
+      <li><strong>Live lockstep comparison</strong>: the same set of
+          controllers stepped forward together, in real time, on the
+          same seed — useful for watching <em>when</em> and <em>why</em>
+          one strategy diverges from another rather than just the final
+          KPIs.</li>
+    </ul>
+
+    <h3>CLI</h3>
+    <pre><code>python -c "
+from hytwin.simulation.scenario import Scenario
+from hytwin.network.compare import compare_controllers
+from hytwin.control.network_rl_controller import NetworkRLController
+topo = Scenario.from_yaml('config/italy_network_large.yaml').topology()
+out = compare_controllers(topo, steps=1008, seed=42, strategies={
+    'none': 'none', 'classical': 'classical',
+    'rl': NetworkRLController.factory('output/rl_models/net_ppo_large')})
+for name, kpis in out.items():
+    print(name, kpis)
+"</code></pre>
+    <p><code>compare_controllers</code> runs every strategy under
+       <strong>identical conditions</strong> (same seed ⇒ same
+       weather/price draw for every site) and returns a
+       <code>{strategy_name: kpis_dict}</code> mapping — this is the
+       only fair way to compare controllers, since the network's
+       behaviour depends heavily on the weather and price draw of the
+       episode.</p>
+
+    <h2 id="vary">9.4 Varying Conditions</h2>
+    <h3>9.4.1 Time horizon</h3>
+    <p>The <code>steps</code> argument (CLI) — or the horizon selector
+       in the dashboard's Scenario Comparison screen — controls how long
+       a run/comparison lasts, at <code>dt_seconds=600</code> (10-minute
+       steps) by default:</p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Horizon</th><th><code>steps</code></th><th>Use for</th></tr></thead>
+      <tbody>
+        <tr><td>A few hours</td><td><code>steps=24</code> (4 hours) or similar</td><td>Quick sanity check of a config or a controller change</td></tr>
+        <tr><td>One day</td><td><code>steps=144</code></td><td>Standard demo / sanity run</td></tr>
+        <tr><td>One week</td><td><code>steps=1008</code></td><td>Statistically meaningful controller comparison — enough variety in weather/price to trust the KPI differences</td></tr>
+        <tr><td>One month</td><td><code>steps≈4320</code></td><td>Deeper validation, e.g. before trusting a training result</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>Rule of thumb: use a short horizon while iterating on a config or
+       reward tweak (fast turnaround), and a week-or-longer horizon for
+       any comparison whose numbers you intend to actually trust — a
+       single day can easily be dominated by one lucky/unlucky weather
+       draw.</p>
+    <pre><code># short check
+out = compare_controllers(topo, steps=24, seed=42, strategies={...})
+# week-long, trustworthy comparison
+out = compare_controllers(topo, steps=1008, seed=42, strategies={...})</code></pre>
+
+    <h3>9.4.2 Seed</h3>
+    <p>The <code>seed</code> argument controls the random weather/price
+       draw (and any stochastic sensor faults). Two uses:</p>
+    <ul>
+      <li><strong>Reproducibility</strong>: re-running with the same
+          <code>seed</code> and the same config reproduces the exact
+          same weather, prices, and outcome — use this when debugging a
+          specific run or when you need a stable baseline to compare
+          against across code changes.</li>
+      <li><strong>Robustness / exploration</strong>: sweep several seeds
+          to see whether a controller's advantage holds up across
+          different weather/price draws, not just one lucky episode:</li>
+    </ul>
+    <pre><code>for seed in (0, 1, 2, 3, 4):
+    out = compare_controllers(topo, steps=1008, seed=seed,
+                               strategies={"classical": "classical", "rl": rl_ctrl})
+    print(seed, out["classical"], out["rl"])</code></pre>
+    <p>A trained agent that only beats the classical controller on one
+       seed is not yet trustworthy — check a handful of seeds before
+       believing a training result.</p>
+
+    <h3>9.4.3 Network configuration</h3>
+    <p>Three ways to point at a different (or edited) network, from
+       least to most interactive:</p>
+    <ol>
+      <li><strong>Dashboard Configuration screen</strong> (Chapter 7
+          §7.11): pick a scenario from the dropdown, edit the YAML in
+          the textarea, <strong>Validate &amp; Save</strong>, then
+          <strong>Activate</strong>. Takes effect on the next
+          <code>/sim/reset</code>, training run, or comparison run —
+          never on one already in progress.</li>
+      <li><strong><code>--config</code> CLI flag</strong> on the
+          dashboard launcher:
+          <pre><code>python -m dashboard.network_app --config config/italy_network_pilot.yaml --speed-factor 30</code></pre>
+      </li>
+      <li><strong><code>Scenario.from_yaml(...)</code></strong> pointed
+          at a different file in a script:
+          <pre><code>topo = Scenario.from_yaml("config/italy_network_pilot.yaml").topology()</code></pre>
+      </li>
+    </ol>
+    <p>To create a genuinely new network (not just re-tune an existing
+       one), copy one of the existing scenario files under
+       <code>config/</code>, then follow Chapter 8 §8.3.3 ("How to add
+       a new node") — duplicate a <code>- id: ...</code> site block,
+       give it a new id, adjust its equipment and links. Per-sensor
+       fault frequency (how often a given sensor misbehaves) is tuned
+       via each sensor's <code>fault_probability</code> field — see
+       Chapter 8 §8.7.</p>
+
+    <h2 id="results">9.5 Interpreting the Results</h2>
+    <h3>KPIs</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>KPI</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Self-sufficiency</td><td>Fraction of demand met without national-grid import</td></tr>
+        <tr><td>Reliability</td><td>Fraction of demand actually met (1 − unmet-demand fraction)</td></tr>
+        <tr><td>Renewable fraction</td><td>Share of energy served by wind/PV/H₂-from-renewables vs. grid import</td></tr>
+        <tr><td>Average H₂ SOC</td><td>Mean state of charge across all sites' tanks — a healthy controller keeps this near its target band, not draining it to zero</td></tr>
+        <tr><td>Cost</td><td>Total network energy cost (€) over the run</td></tr>
+        <tr><td>CO₂</td><td>Total grid-import carbon emissions (kg) over the run</td></tr>
+        <tr><td>Grid import</td><td>Total energy imported from the national grid across all sites</td></tr>
+        <tr><td>Inter-node exchange</td><td>Total energy/H₂ moved between sites over the links — a sign the network topology itself is being used, not just each site's own grid connection</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>Reward / learning curve</h3>
+    <div class="ai-note">
+      There is <strong>no fixed "optimal" reward value</strong> —
+      <code>NetworkRewardConfig</code> produces an unbounded weighted
+      sum whose achievable range depends on that episode's specific
+      weather and price draw (see Chapter 5 §5.7). Do not compare a raw
+      reward number against a hardcoded target. Instead:
+      <ol>
+        <li>Compare <strong>relative performance</strong> vs.
+            <code>none</code>/<code>classical</code> on the <strong>same
+            seed</strong>, via <code>compare_controllers</code> — this is
+            the only apples-to-apples comparison.</li>
+        <li>When training, watch the <strong>learning curve's smoothed
+            trend</strong> (rising and flattening = converging), not any
+            single episode's reward — the dashboard's AI Training screen
+            and SB3's <code>Monitor</code>-derived
+            <code>info["episode"]</code> records are both built around
+            this trend, not a target value.</li>
+      </ol>
+    </div>
+
+    <h3>Events &amp; Alarms log</h3>
+    <p>Each entry names the specific component at fault (site + device
+       id + device kind) and the fault kind in plain English — "outlier
+       spike", "stuck reading (not updating)", "sensor offline (no
+       data)", "reading drifted from model estimate" — with measured
+       vs. model-expected value where available. Threshold-crossing
+       conditions (unmet demand, H₂ SOC, price spikes) use a dead-band
+       between raise and clear, so one real episode produces one raise
+       event and one matching "cleared/recovered" event, not a flood of
+       step-by-step re-triggers — a healthy run should show raise/clear
+       pairs, not isolated raises that never clear. See Chapter 7 §7.9
+       and Chapter 4 §4.12 for the full mapping from internal sensor
+       status to displayed message.</p>
+
+    <h2 id="tests">9.6 Test Suite</h2>
+    <pre><code>pytest tests/ -v</code></pre>
+    <p><strong>168 tests, all passing</strong> — covering the digital
+       twin, link models, component models, network controller, network
+       dashboard, network RL, network topology, network twin, RL
+       environment, sensors, and weather/cost realism.</p>
+
+    <div class="page-nav">
+      <a href="configuration-reference.html">
+        <div class="nav-label">← Previous</div>
+        <div class="nav-title">8 · Configuration Reference</div>
+      </a>
+      <a class="next" href="index.html">
+        <div class="nav-label">Back to →</div>
+        <div class="nav-title">Overview</div>
+      </a>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>HyTwin 2.0 Technical Reference Manual — Chapter 9</span>
+    <span>H2_POR Pilot Project</span>
+  </footer>
+
+</div>
+</body>
+</html>

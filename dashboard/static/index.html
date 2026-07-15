@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HyTwin 2.0 — Control Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ── Reset & base ──────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #0a0f1e;
+  --surface:   #111827;
+  --surface2:  #1f2937;
+  --border:    #374151;
+  --accent:    #3b82f6;
+  --green:     #22c55e;
+  --red:       #ef4444;
+  --yellow:    #f59e0b;
+  --purple:    #a78bfa;
+  --cyan:      #06b6d4;
+  --text:      #f1f5f9;
+  --text2:     #94a3b8;
+  --font:      'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 13px; }
+
+/* ── Layout ────────────────────────────────────────────────────────────────── */
+.shell { display: grid; grid-template-rows: 52px 1fr; height: 100%; }
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16px; padding: 0 20px;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar .logo { font-size: 16px; font-weight: 700; color: var(--accent); letter-spacing: .5px; }
+.topbar .tagline { color: var(--text2); font-size: 11px; }
+.topbar .spacer { flex: 1; }
+.topbar .status-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 12px; font-size: 11px;
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text2); }
+.dot.live { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+.dot.warn { background: var(--yellow); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+.body { display: grid; grid-template-columns: 260px 1fr; overflow: hidden; }
+.sidebar {
+  background: var(--surface); border-right: 1px solid var(--border);
+  overflow-y: auto; padding: 16px 12px; display: flex; flex-direction: column; gap: 12px;
+}
+.main-area {
+  position: relative;
+  overflow-y: auto;
+  padding: 58px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Cards ─────────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+}
+.card-title {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .8px; color: var(--text2); margin-bottom: 10px;
+}
+
+/* ── KPI tiles ──────────────────────────────────────────────────────────────── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.kpi {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.kpi-label { font-size: 10px; color: var(--text2); font-weight: 500; }
+.kpi-value { font-size: 22px; font-weight: 700; line-height: 1; }
+.kpi-unit  { font-size: 10px; color: var(--text2); }
+.kpi.accent   .kpi-value { color: var(--accent); }
+.kpi.green    .kpi-value { color: var(--green); }
+.kpi.yellow   .kpi-value { color: var(--yellow); }
+.kpi.red      .kpi-value { color: var(--red); }
+.kpi.purple   .kpi-value { color: var(--purple); }
+.kpi.cyan     .kpi-value { color: var(--cyan); }
+
+/* ── Charts row ─────────────────────────────────────────────────────────────── */
+.charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+.charts-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.chart-wrap { position: relative; height: 180px; }
+
+/* ── Power bar ──────────────────────────────────────────────────────────────── */
+.power-bars { display: flex; flex-direction: column; gap: 6px; }
+.pbar-row { display: flex; align-items: center; gap: 8px; }
+.pbar-label { width: 80px; font-size: 11px; color: var(--text2); text-align: right; }
+.pbar-track {
+  flex: 1; height: 12px; background: var(--surface2);
+  border-radius: 6px; overflow: hidden; position: relative;
+}
+.pbar-fill { height: 100%; border-radius: 6px; transition: width .4s ease; min-width: 2px; }
+.pbar-val { width: 64px; font-size: 11px; font-weight: 600; text-align: right; }
+
+/* ── H₂ gauge ───────────────────────────────────────────────────────────────── */
+.h2-gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.h2-gauge-track {
+  width: 100%; height: 22px; background: var(--surface2);
+  border-radius: 11px; overflow: hidden; position: relative; border: 1px solid var(--border);
+}
+.h2-gauge-fill {
+  height: 100%; border-radius: 11px;
+  background: linear-gradient(90deg, #0ea5e9, #6366f1);
+  transition: width .5s ease;
+  display: flex; align-items: center; justify-content: flex-end; padding-right: 8px;
+  font-size: 10px; font-weight: 700; color: #fff; min-width: 40px;
+}
+
+/* ── Price ticker ───────────────────────────────────────────────────────────── */
+.price-display {
+  display: flex; align-items: baseline; gap: 6px; margin: 6px 0;
+}
+.price-display .price-val {
+  font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums;
+  transition: color .3s;
+}
+.price-display .price-unit { font-size: 12px; color: var(--text2); }
+.price-high { color: var(--red) !important; }
+.price-mid  { color: var(--yellow) !important; }
+.price-low  { color: var(--green) !important; }
+
+/* ── Alert bar ──────────────────────────────────────────────────────────────── */
+.alert-bar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  min-height: 34px;
+  background: #7f1d1d;
+  border: 1px solid #b91c1c;
+  border-radius: 8px;
+  padding: 8px 14px;
+  color: #fecaca;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .18s ease;
+  z-index: 5;
+}
+.alert-bar.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ── Sidebar widgets ────────────────────────────────────────────────────────── */
+.sidebar-section { font-size: 10px; color: var(--text2); text-transform: uppercase;
+  letter-spacing: .8px; padding: 6px 4px 2px; border-top: 1px solid var(--border); margin-top: 4px; }
+.sidebar-section:first-child { border-top: none; margin-top: 0; }
+
+.ctrl-btn-group { display: flex; flex-direction: column; gap: 6px; }
+.ctrl-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-size: 12px; font-weight: 600; border-radius: 7px;
+  padding: 8px 12px; cursor: pointer; transition: all .2s; text-align: left;
+  display: flex; align-items: center; gap: 8px;
+}
+.ctrl-btn:hover { background: var(--border); }
+.ctrl-btn.active { border-color: var(--accent); background: rgba(59,130,246,.15); color: var(--accent); }
+.ctrl-btn .icon { font-size: 14px; }
+
+.sim-ctrl { display: flex; gap: 6px; }
+.sim-btn {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-size: 12px; border-radius: 7px;
+  padding: 7px; cursor: pointer; transition: all .2s; font-weight: 600;
+}
+.sim-btn:hover { opacity: .85; }
+.sim-btn.start { background: #166534; border-color: var(--green); color: var(--green); }
+.sim-btn.stop  { background: #7f1d1d; border-color: var(--red);   color: var(--red); }
+.sim-btn.reset { background: var(--surface2); }
+
+.speed-wrap { margin-top: 8px; }
+.speed-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+.speed-head span:first-child { color: var(--text2); }
+.speed-head span:last-child  { color: var(--accent); font-weight: 700; }
+.speed-slider {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.stat-table { width: 100%; border-collapse: collapse; }
+.stat-table td { padding: 3px 6px; font-size: 11px; }
+.stat-table td:last-child { text-align: right; font-weight: 600; color: var(--text); }
+.stat-table td:first-child { color: var(--text2); }
+
+/* ── Node list ───────────────────────────────────────────────────────────────── */
+.node-list { display: flex; flex-direction: column; gap: 4px; }
+.node-item {
+  background: var(--surface2); border-radius: 6px; padding: 6px 10px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px;
+}
+.node-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.node-dot.ok    { background: var(--green); }
+.node-dot.warn  { background: var(--yellow); }
+.node-dot.fault { background: var(--red); }
+.node-name { flex: 1; font-weight: 600; }
+.node-val  { color: var(--text2); }
+
+/* ── Event log ───────────────────────────────────────────────────────────────── */
+.event-log {
+  height: 120px; overflow-y: auto; font-size: 10px; font-family: 'JetBrains Mono', monospace;
+  background: #0f172a; border-radius: 6px; padding: 6px 8px;
+  display: flex; flex-direction: column-reverse; gap: 1px;
+}
+.event-log .ev { padding: 1px 0; border-bottom: 1px solid #1e293b; }
+.ev-time { color: #475569; }
+.ev-warn { color: var(--yellow); }
+.ev-err  { color: var(--red); }
+.ev-ok   { color: var(--green); }
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Component Detail Panel ───────────────────────────────────────────────────── */
+.detail-panel {
+  position: fixed;
+  top: 52px;
+  right: -460px;
+  width: 460px;
+  bottom: 0;
+  background: var(--surface);
+  border-left: 2px solid var(--accent);
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  transition: right .25s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+  box-shadow: -6px 0 24px rgba(0,0,0,.5);
+}
+.detail-panel.open { right: 0; }
+
+.dp-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  background: var(--surface2);
+}
+.dp-close {
+  background: none; border: none;
+  color: var(--text2); font-size: 18px;
+  cursor: pointer; padding: 4px 8px;
+  border-radius: 4px; line-height: 1;
+}
+.dp-close:hover { background: var(--border); color: var(--text); }
+.dp-title { font-weight: 700; font-size: 15px; color: var(--text); }
+.dp-type  { font-size: 11px; color: var(--accent); margin-top: 2px; }
+
+.dp-body {
+  flex: 1; overflow-y: auto;
+  padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.dp-section {
+  font-size: 10px; color: var(--text2); text-transform: uppercase;
+  letter-spacing: .8px; padding-bottom: 5px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.dp-chart-wrap { height: 170px; position: relative; }
+
+/* Sensor rows */
+.sensor-header {
+  display: flex; gap: 4px;
+  font-size: 9px; color: var(--text2);
+  padding: 0 0 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.sensor-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 0; font-size: 11px;
+  border-bottom: 1px solid #1e293b;
+}
+.sensor-id    { width: 90px; color: var(--text2); font-family: monospace; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sensor-val   { width: 72px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.sensor-true  { width: 62px; color: var(--text2); text-align: right; font-size: 10px; font-variant-numeric: tabular-nums; }
+.sensor-q-track { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.sensor-q-fill  { height: 100%; border-radius: 3px; transition: width .4s ease; }
+.sensor-status  { width: 56px; font-size: 9px; font-weight: 600; text-align: right; }
+.s-ok       { color: var(--green); }
+.s-degraded { color: var(--yellow); }
+.s-fault    { color: var(--red); }
+
+/* Node list clickable */
+.node-item {
+  cursor: pointer;
+  transition: background .15s;
+}
+.node-item:hover { background: var(--border) !important; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ══ Top bar ══════════════════════════════════════════════════════════════ -->
+<div class="topbar">
+  <span class="logo">⚡ HyTwin 2.0</span>
+  <span class="tagline">H₂ Grid Digital Twin — Real-Time Control Dashboard</span>
+  <div class="spacer"></div>
+  <div class="status-badge">
+    <div class="dot" id="dot-live"></div>
+    <span id="label-live">Connecting…</span>
+  </div>
+  <div class="status-badge" style="margin-left:8px">
+    <span style="color:var(--text2)">Step</span>
+    <span id="label-step" style="font-weight:700">—</span>
+  </div>
+  <div class="status-badge" style="margin-left:8px">
+    <span id="label-time" style="font-variant-numeric:tabular-nums">—</span>
+  </div>
+</div>
+
+<!-- ══ Body ══════════════════════════════════════════════════════════════════ -->
+<div class="body">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+  <div class="sidebar">
+
+    <div class="sidebar-section">Simulation</div>
+    <div class="sim-ctrl">
+      <button class="sim-btn start" onclick="api('/sim/start')">▶ Start</button>
+      <button class="sim-btn stop"  onclick="api('/sim/stop')">⏸ Pause</button>
+      <button class="sim-btn reset" onclick="api('/sim/reset')">↺ Reset</button>
+    </div>
+    <div class="speed-wrap">
+      <div class="speed-head">
+        <span>Simulation speed</span>
+        <span id="speed-label">MAX</span>
+      </div>
+      <input
+        id="speed-slider"
+        class="speed-slider"
+        type="range"
+        min="0"
+        max="240"
+        step="1"
+        value="0"
+      >
+    </div>
+
+    <div class="sidebar-section">Controller</div>
+    <div class="ctrl-btn-group" id="ctrl-buttons">
+      <button class="ctrl-btn active" id="btn-classical" onclick="setCtrl('classical')">
+        <span class="icon">📐</span>Classical (Rules)
+      </button>
+      <button class="ctrl-btn" id="btn-rl" onclick="setCtrl('rl')">
+        <span class="icon">🤖</span>RL Agent (PPO)
+      </button>
+      <button class="ctrl-btn" id="btn-none" onclick="setCtrl('none')">
+        <span class="icon">🔁</span>No Control
+      </button>
+    </div>
+
+    <div class="sidebar-section">Energy Price</div>
+    <div class="price-display">
+      <span class="price-val price-low" id="price-val">—</span>
+      <span class="price-unit">€/kWh</span>
+    </div>
+    <div style="font-size:10px;color:var(--text2)" id="price-tariff">Off-peak (F3)</div>
+
+    <div class="sidebar-section">Weather</div>
+    <table class="stat-table">
+      <tr><td>Wind speed</td><td id="wth-wind">—</td></tr>
+      <tr><td>Solar GHI</td><td id="wth-ghi">—</td></tr>
+      <tr><td>Temperature</td><td id="wth-temp">—</td></tr>
+    </table>
+
+    <div class="sidebar-section">Grid Status</div>
+    <table class="stat-table">
+      <tr><td>Grid available</td><td id="grid-avail">—</td></tr>
+      <tr><td>Grid connection</td><td id="grid-conn">—</td></tr>
+      <tr><td>Cumul. cost</td><td id="cum-cost">—</td></tr>
+      <tr><td>Cumul. CO₂</td><td id="cum-co2" data-co2="0">—</td></tr>
+    </table>
+
+    <div class="sidebar-section">Nodes</div>
+    <div class="node-list" id="node-list">
+      <!-- populated by JS -->
+    </div>
+
+    <div class="sidebar-section">Event Log</div>
+    <div class="event-log" id="event-log"></div>
+  </div>
+
+  <!-- ── Main area ────────────────────────────────────────────────────────── -->
+  <div class="main-area">
+
+    <!-- Alert bar -->
+    <div class="alert-bar" id="alert-bar">
+      ⚠ <span id="alert-text"></span>
+    </div>
+
+    <!-- KPI tiles -->
+    <div class="kpi-grid">
+      <div class="kpi green">
+        <span class="kpi-label">Renewable Fraction</span>
+        <span class="kpi-value" id="kpi-rf">—</span>
+        <span class="kpi-unit">%</span>
+      </div>
+      <div class="kpi accent">
+        <span class="kpi-label">Self-Sufficiency</span>
+        <span class="kpi-value" id="kpi-ss">—</span>
+        <span class="kpi-unit">%</span>
+      </div>
+      <div class="kpi cyan">
+        <span class="kpi-label">H₂ SOC</span>
+        <span class="kpi-value" id="kpi-soc">—</span>
+        <span class="kpi-unit">%</span>
+      </div>
+      <div class="kpi yellow">
+        <span class="kpi-label">H₂ Pressure</span>
+        <span class="kpi-value" id="kpi-pres">—</span>
+        <span class="kpi-unit">bar</span>
+      </div>
+      <div class="kpi purple">
+        <span class="kpi-label">System Health</span>
+        <span class="kpi-value" id="kpi-health">—</span>
+        <span class="kpi-unit">%</span>
+      </div>
+      <div class="kpi red">
+        <span class="kpi-label">Grid Import</span>
+        <span class="kpi-value" id="kpi-grid">—</span>
+        <span class="kpi-unit">kW</span>
+      </div>
+      <div class="kpi green">
+        <span class="kpi-label">H₂ Production</span>
+        <span class="kpi-value" id="kpi-h2prod">—</span>
+        <span class="kpi-unit">kg/h</span>
+      </div>
+      <div class="kpi accent">
+        <span class="kpi-label">Step Cost</span>
+        <span class="kpi-value" id="kpi-cost">—</span>
+        <span class="kpi-unit">€</span>
+      </div>
+    </div>
+
+    <!-- Power bars + main chart -->
+    <div class="charts-row">
+      <div class="card">
+        <div class="card-title">Power Flows — History (kW)</div>
+        <div class="chart-wrap"><canvas id="chart-power"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Instantaneous Power Dispatch</div>
+        <div class="power-bars" id="power-bars"></div>
+      </div>
+    </div>
+
+    <!-- H₂ gauge + SOC + price charts -->
+    <div class="charts-row2">
+      <div class="card">
+        <div class="card-title">H₂ Storage — SOC History</div>
+        <div class="h2-gauge-wrap">
+          <div style="width:100%;text-align:right;font-size:10px;color:var(--text2);margin-bottom:4px" id="h2-mass-label">— kg stored</div>
+          <div class="h2-gauge-track">
+            <div class="h2-gauge-fill" id="h2-gauge" style="width:50%">50%</div>
+          </div>
+        </div>
+        <div style="margin-top:10px" class="chart-wrap"><canvas id="chart-soc"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Energy Price History (€/kWh)</div>
+        <div class="chart-wrap"><canvas id="chart-price"></canvas></div>
+      </div>
+    </div>
+
+    <!-- KPI trends -->
+    <div class="card">
+      <div class="card-title">KPI Trends — Renewable Fraction &amp; Self-Sufficiency</div>
+      <div class="chart-wrap" style="height:130px"><canvas id="chart-kpi"></canvas></div>
+    </div>
+
+  </div><!-- /main-area -->
+</div><!-- /body -->
+
+<!-- ══ Component Detail Panel (slide-in overlay) ════════════════════════════ -->
+<div class="detail-panel" id="detail-panel">
+  <div class="dp-header">
+    <div style="flex:1;min-width:0">
+      <div class="dp-title" id="dp-title">—</div>
+      <div class="dp-type" id="dp-type">—</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+      <div style="text-align:right">
+        <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Health</div>
+        <div id="dp-health" style="font-size:18px;font-weight:800">—</div>
+      </div>
+      <button class="dp-close" onclick="closeComponentDetail()">✕</button>
+    </div>
+  </div>
+  <div class="dp-body">
+    <div>
+      <div class="dp-section">Real-Time Metrics History</div>
+      <div class="dp-chart-wrap"><canvas id="dp-chart"></canvas></div>
+    </div>
+    <div>
+      <div class="dp-section">Virtual Sensor Signals</div>
+      <div id="dp-sensors">
+        <div style="color:var(--text2);font-size:11px;padding:6px 0">No sensors linked to this component.</div>
+      </div>
+    </div>
+    <div>
+      <div class="dp-section">Component Specifications</div>
+      <table class="stat-table" id="dp-specs">
+        <tr><td colspan="2" style="color:var(--text2);padding:6px 0">Not yet loaded.</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /shell -->
+
+<script>
+// ============================================================================
+// Constants & helpers
+// ============================================================================
+const MAX_POINTS = 144;   // rolling window
+const WS_URL = `ws://${location.host}/ws`;
+
+function fmt1(v)  { return typeof v === 'number' ? v.toFixed(1) : '—'; }
+function fmt2(v)  { return typeof v === 'number' ? v.toFixed(2) : '—'; }
+function fmt3(v)  { return typeof v === 'number' ? v.toFixed(3) : '—'; }
+function fmtPct(v){ return typeof v === 'number' ? (v*100).toFixed(1) : '—'; }
+function el(id)   { return document.getElementById(id); }
+
+// ============================================================================
+// Chart setup
+// ============================================================================
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = '#1f2937';
+Chart.defaults.font.size = 10;
+
+function makeLabels() { return []; }
+
+const powerChart = new Chart(el('chart-power'), {
+  type: 'line',
+  data: {
+    labels: makeLabels(),
+    datasets: [
+      { label: 'Wind',        data: [], borderColor: '#3b82f6', borderWidth: 1.5, pointRadius: 0, fill: true, backgroundColor: 'rgba(59,130,246,.08)' },
+      { label: 'PV',          data: [], borderColor: '#f59e0b', borderWidth: 1.5, pointRadius: 0, fill: true, backgroundColor: 'rgba(245,158,11,.08)' },
+      { label: 'Fuel Cell',   data: [], borderColor: '#10b981', borderWidth: 1.5, pointRadius: 0, fill: false },
+      { label: 'Electrolyzer',data: [], borderColor: '#a78bfa', borderWidth: 1, pointRadius: 0, fill: false, borderDash: [4,2] },
+      { label: 'Load',        data: [], borderColor: '#f87171', borderWidth: 2, pointRadius: 0, fill: false, borderDash: [6,3] },
+      { label: 'Grid Import', data: [], borderColor: '#ef4444', borderWidth: 1, pointRadius: 0, fill: true, backgroundColor: 'rgba(239,68,68,.10)' },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, animation: false,
+    plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 8 } } },
+    scales: {
+      x: {
+        display: true,
+        grid: { color: '#1f2937' },
+        ticks: { autoSkip: true, maxTicksLimit: 6 }
+      },
+      y: { grid: { color: '#1f2937' }, ticks: { maxTicksLimit: 5 } }
+    }
+  }
+});
+
+const socChart = new Chart(el('chart-soc'), {
+  type: 'line',
+  data: {
+    labels: makeLabels(),
+    datasets: [
+      { label: 'SOC', data: [], borderColor: '#06b6d4', borderWidth: 2, pointRadius: 0, fill: true, backgroundColor: 'rgba(6,182,212,.12)' },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, animation: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        display: true,
+        grid: { color: '#1f2937' },
+        ticks: { autoSkip: true, maxTicksLimit: 6 }
+      },
+      y: { min: 0, max: 1, grid: { color: '#1f2937' }, ticks: { callback: v => (v*100).toFixed(0)+'%', maxTicksLimit: 5 } }
+    }
+  }
+});
+
+const priceChart = new Chart(el('chart-price'), {
+  type: 'line',
+  data: {
+    labels: makeLabels(),
+    datasets: [
+      { label: 'Price', data: [], borderColor: '#f97316', borderWidth: 2, pointRadius: 0, fill: true, backgroundColor: 'rgba(249,115,22,.12)' },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, animation: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        display: true,
+        grid: { color: '#1f2937' },
+        ticks: { autoSkip: true, maxTicksLimit: 6 }
+      },
+      y: { grid: { color: '#1f2937' }, ticks: { callback: v => '€'+v.toFixed(2), maxTicksLimit: 4 } }
+    }
+  }
+});
+
+const kpiChart = new Chart(el('chart-kpi'), {
+  type: 'line',
+  data: {
+    labels: makeLabels(),
+    datasets: [
+      { label: 'Renew. Fraction %', data: [], borderColor: '#22c55e', borderWidth: 1.5, pointRadius: 0, fill: false },
+      { label: 'Self-Sufficiency %', data: [], borderColor: '#94a3b8', borderWidth: 1.5, pointRadius: 0, fill: false, borderDash: [4,3] },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, animation: false,
+    plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 8 } } },
+    scales: {
+      x: {
+        display: true,
+        grid: { color: '#1f2937' },
+        ticks: { autoSkip: true, maxTicksLimit: 6 }
+      },
+      y: { min: 0, max: 100, grid: { color: '#1f2937' }, ticks: { callback: v => v+'%', maxTicksLimit: 5 } }
+    }
+  }
+});
+
+function pushPoint(chart, datasetIdx, label, value) {
+  const ds = chart.data.datasets[datasetIdx];
+  const lb = chart.data.labels;
+  ds.data.push(value);
+  if (datasetIdx === 0) lb.push(label);
+  if (ds.data.length > MAX_POINTS) ds.data.shift();
+  if (datasetIdx === 0 && lb.length > MAX_POINTS) lb.shift();
+}
+
+// ============================================================================
+// Power bar widgets
+// ============================================================================
+const POWER_BARS = [
+  { id: 'pb-wind', label: 'Wind',        max: 1200, color: '#3b82f6' },
+  { id: 'pb-pv',   label: 'PV',          max: 500,  color: '#f59e0b' },
+  { id: 'pb-fc',   label: 'Fuel Cell',   max: 200,  color: '#10b981' },
+  { id: 'pb-el',   label: 'Electrolyzer',max: 500,  color: '#a78bfa' },
+  { id: 'pb-load', label: 'Load',        max: 700,  color: '#f87171' },
+  { id: 'pb-grid', label: 'Grid',        max: 800,  color: '#ef4444' },
+];
+
+(function buildPowerBars() {
+  const container = el('power-bars');
+  POWER_BARS.forEach(b => {
+    container.innerHTML += `
+      <div class="pbar-row">
+        <span class="pbar-label">${b.label}</span>
+        <div class="pbar-track">
+          <div class="pbar-fill" id="${b.id}" style="width:0%;background:${b.color}"></div>
+        </div>
+        <span class="pbar-val" id="${b.id}-val">— kW</span>
+      </div>`;
+  });
+})();
+
+function updatePowerBar(bid, value, max) {
+  const pct = Math.min(100, Math.max(0, Math.abs(value) / max * 100));
+  const fill = el(bid);
+  const val = el(bid + '-val');
+  if (fill) fill.style.width = pct + '%';
+  if (val)  val.textContent = fmt1(value) + ' kW';
+}
+
+// ============================================================================
+// Node status list
+// ============================================================================
+const NODES = [
+  { id: 'wt1', label: 'Wind WТ1', key: 'wind_kw' },
+  { id: 'wt2', label: 'Wind WT2', key: 'wind_kw' },
+  { id: 'pv1', label: 'PV Array 1', key: 'pv_kw' },
+  { id: 'pv2', label: 'PV Array 2', key: 'pv_kw' },
+  { id: 'el1', label: 'Electrolyzer 1', key: 'el_kw' },
+  { id: 'el2', label: 'Electrolyzer 2', key: 'el_kw' },
+  { id: 'fc1', label: 'Fuel Cell 1', key: 'fc_kw' },
+  { id: 'tk1', label: 'Tank 1', key: 'h2_soc' },
+  { id: 'tk2', label: 'Tank 2', key: 'h2_soc' },
+  { id: 'grid1', label: 'Grid Connection', key: 'grid_connection_kw' },
+];
+
+(function buildNodeList() {
+  const nl = el('node-list');
+  NODES.forEach(n => {
+    nl.innerHTML += `
+      <div class="node-item" id="ni-${n.id}" onclick="openComponentDetail('${n.id}')">
+        <div class="node-dot ok" id="nd-${n.id}"></div>
+        <span class="node-name">${n.label}</span>
+        <span class="node-val" id="nv-${n.id}">—</span>
+      </div>`;
+  });
+})();
+
+function updateNodes(data) {
+  const anomaly = new Set(data.anomaly_nodes || []);
+  // Simple per-node value display (approximate using aggregated fields)
+  const nodeVals = {
+    wt1:   fmt1(data.wind_kw / 2) + ' kW',
+    wt2:   fmt1(data.wind_kw / 2) + ' kW',
+    pv1:   fmt1(data.pv_kw / 2) + ' kW',
+    pv2:   fmt1(data.pv_kw / 2) + ' kW',
+    el1:   fmt1(data.el_kw / 2) + ' kW',
+    el2:   fmt1(data.el_kw / 2) + ' kW',
+    fc1:   fmt1(data.fc_kw) + ' kW',
+    tk1:   fmtPct(data.h2_soc) + '%',
+    tk2:   fmtPct(data.h2_soc) + '%',
+    grid1: (data.grid_connection_kw >= 0 ? '+' : '') + fmt1(data.grid_connection_kw) + ' kW',
+  };
+  NODES.forEach(n => {
+    const dot = el('nd-' + n.id);
+    const val = el('nv-' + n.id);
+    if (dot) {
+      const isAnomaly = anomaly.has(n.id);
+      dot.className = 'node-dot ' + (isAnomaly ? 'fault' : (data.grid_available === false && n.id === 'grid1' ? 'warn' : 'ok'));
+    }
+    if (val) val.textContent = nodeVals[n.id] || '—';
+  });
+}
+
+// ============================================================================
+// Event log
+// ============================================================================
+const MAX_LOG = 60;
+const logEntries = [];
+
+function logEvent(type, msg) {
+  const now = new Date().toLocaleTimeString();
+  logEntries.unshift({ type, msg, time: now });
+  if (logEntries.length > MAX_LOG) logEntries.pop();
+  renderLog();
+}
+
+function renderLog() {
+  const log = el('event-log');
+  log.innerHTML = logEntries.slice(0, 20).map(e =>
+    `<div class="ev ev-${e.type}"><span class="ev-time">${e.time}</span> ${e.msg}</div>`
+  ).join('');
+}
+
+// ============================================================================
+// Price tariff classifier
+// ============================================================================
+function priceTariff(price) {
+  if (price >= 0.22) return { cls: 'price-high', label: 'F1 Peak — HIGH' };
+  if (price >= 0.13) return { cls: 'price-mid',  label: 'F2 Shoulder — MED' };
+  return               { cls: 'price-low',  label: 'F3 Off-peak — LOW' };
+}
+
+// ============================================================================
+// State updater
+// ============================================================================
+let cumulativeCo2 = 0;
+let prevGridAvail = true;
+
+function speedText(v) {
+  const n = Number(v);
+  return n <= 0 ? 'MAX' : `${n}x`;
+}
+
+function syncSpeedLabel(v) {
+  const sv = Number(v);
+  const slider = el('speed-slider');
+  if (slider) slider.value = String(Math.max(0, Math.min(240, Math.round(sv))));
+  el('speed-label').textContent = speedText(sv);
+}
+
+function formatChartTime(isoTs) {
+  if (!isoTs) return { top: '—', axis: '—' };
+  const dt = new Date(isoTs);
+  const dd = String(dt.getDate()).padStart(2, '0');
+  const mm = String(dt.getMonth() + 1).padStart(2, '0');
+  const yyyy = dt.getFullYear();
+  const hh = String(dt.getHours()).padStart(2, '0');
+  const mi = String(dt.getMinutes()).padStart(2, '0');
+  return {
+    top: `${yyyy}-${mm}-${dd} ${hh}:${mi}`,
+    axis: `${dd}/${mm} ${hh}:${mi}`,
+  };
+}
+
+function applyState(d) {
+  const tf = formatChartTime(d.ts);
+  const ts = tf.axis;
+
+  // Topbar
+  el('label-step').textContent = d.step.toLocaleString();
+  el('label-time').textContent = tf.top;
+
+  // KPI tiles
+  el('kpi-rf').textContent    = fmtPct(d.renewable_fraction);
+  el('kpi-ss').textContent    = fmtPct(d.self_sufficiency);
+  el('kpi-soc').textContent   = fmtPct(d.h2_soc);
+  el('kpi-pres').textContent  = fmt1(d.h2_pressure_bar);
+  el('kpi-health').textContent= fmtPct(d.health);
+  el('kpi-grid').textContent  = fmt1(Math.max(0, d.grid_connection_kw));
+  el('kpi-h2prod').textContent= fmt3(d.h2_prod_kg_h);
+  el('kpi-cost').textContent  = fmt3(d.step_cost_eur);
+
+  // Sidebar
+  el('wth-wind').textContent  = fmt1(d.wind_ms) + ' m/s';
+  el('wth-ghi').textContent   = fmt1(d.ghi_wm2) + ' W/m²';
+  el('wth-temp').textContent  = fmt1(d.temp_c) + ' °C';
+  el('grid-avail').innerHTML  = d.grid_available
+    ? '<span style="color:var(--green)">✓ Online</span>'
+    : '<span style="color:var(--red)">✗ OUTAGE</span>';
+  el('grid-conn').textContent = (d.grid_connection_kw >= 0 ? '+' : '') + fmt1(d.grid_connection_kw) + ' kW';
+  el('cum-cost').textContent  = '€ ' + fmt2(d.cum_cost_eur);
+  cumulativeCo2 += d.co2_kg_step;
+  el('cum-co2').textContent   = fmt2(cumulativeCo2) + ' kg';
+
+  // Price
+  const { cls, label } = priceTariff(d.price_eur_kwh);
+  const pv = el('price-val');
+  pv.textContent = fmt3(d.price_eur_kwh);
+  pv.className   = 'price-val ' + cls;
+  el('price-tariff').textContent = label;
+
+  // H₂ gauge
+  const soc_pct = (d.h2_soc * 100).toFixed(1) + '%';
+  const gauge = el('h2-gauge');
+  gauge.style.width = soc_pct;
+  gauge.textContent = soc_pct;
+  el('h2-mass-label').textContent = fmt1(d.h2_storage_kg) + ' kg stored  ·  ' + fmt1(d.h2_pressure_bar) + ' bar';
+
+  // Power bars
+  updatePowerBar('pb-wind', d.wind_kw, 1200);
+  updatePowerBar('pb-pv',   d.pv_kw,   500);
+  updatePowerBar('pb-fc',   d.fc_kw,   200);
+  updatePowerBar('pb-el',   d.el_kw,   500);
+  updatePowerBar('pb-load', d.load_kw, 700);
+  updatePowerBar('pb-grid', Math.max(0, d.grid_connection_kw), 800);
+
+  // Charts
+  pushPoint(powerChart, 0, ts, d.wind_kw);
+  pushPoint(powerChart, 1, ts, d.pv_kw);
+  pushPoint(powerChart, 2, ts, d.fc_kw);
+  pushPoint(powerChart, 3, ts, d.el_kw);
+  pushPoint(powerChart, 4, ts, d.load_kw);
+  pushPoint(powerChart, 5, ts, Math.max(0, d.grid_connection_kw));
+  powerChart.update();
+
+  pushPoint(socChart, 0, ts, d.h2_soc);
+  socChart.update();
+
+  pushPoint(priceChart, 0, ts, d.price_eur_kwh);
+  priceChart.update();
+
+  pushPoint(kpiChart, 0, ts, d.renewable_fraction * 100);
+  pushPoint(kpiChart, 1, ts, d.self_sufficiency * 100);
+  kpiChart.update();
+
+  // Nodes
+  updateNodes(d);
+
+  // Alerts
+  const alerts = [];
+  if (!d.grid_available) alerts.push('⚡ Grid outage detected!');
+  if (d.h2_soc < 0.10)   alerts.push('🔵 H₂ SOC critically low (<10%)');
+  if (d.h2_soc > 0.92)   alerts.push('🔵 H₂ tank near capacity (>92%)');
+  if (d.health < 0.75)   alerts.push(`🔴 Low system health: ${fmtPct(d.health)}%`);
+  if (d.price_eur_kwh > 0.60) alerts.push(`💸 Price spike: €${fmt3(d.price_eur_kwh)}/kWh`);
+
+  const ab = el('alert-bar');
+  if (alerts.length > 0) {
+    ab.classList.add('show');
+    el('alert-text').textContent = alerts.join('  ·  ');
+  } else {
+    ab.classList.remove('show');
+  }
+
+  // Log notable events
+  if (!d.grid_available && prevGridAvail) logEvent('err', 'Grid outage started');
+  if (d.grid_available  && !prevGridAvail) logEvent('ok',  'Grid restored');
+  if (d.price_eur_kwh > 0.60) logEvent('warn', `Price spike €${fmt3(d.price_eur_kwh)}/kWh`);
+  if (d.h2_soc < 0.08)        logEvent('warn', `H₂ SOC low: ${fmtPct(d.h2_soc)}%`);
+  prevGridAvail = d.grid_available;
+
+  // Update component detail panel if open
+  updateDetailPanel(d);
+}
+
+// ============================================================================
+// WebSocket connection
+// ============================================================================
+let ws = null;
+let reconnectTimer = null;
+
+function connect() {
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    el('dot-live').className   = 'dot live';
+    el('label-live').textContent = 'Live';
+    logEvent('ok', 'Dashboard connected');
+    clearTimeout(reconnectTimer);
+  };
+
+  ws.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      applyState(data);
+    } catch(err) {
+      console.warn('WS parse error:', err);
+    }
+  };
+
+  ws.onerror = () => {
+    el('dot-live').className    = 'dot warn';
+    el('label-live').textContent = 'Error';
+  };
+
+  ws.onclose = () => {
+    el('dot-live').className    = 'dot';
+    el('label-live').textContent = 'Reconnecting…';
+    reconnectTimer = setTimeout(connect, 2000);
+  };
+}
+
+connect();
+logEvent('ok', 'Dashboard loaded');
+
+// Sync speed/control status from backend once on page load
+async function refreshStatus() {
+  try {
+    const r = await fetch('/status');
+    if (!r.ok) return;
+    const s = await r.json();
+    syncSpeedLabel(s.speed_factor || 0);
+    ['classical','rl','none'].forEach(t => {
+      const b = el('btn-' + t);
+      if (b) b.classList.toggle('active', t === s.controller);
+    });
+  } catch (err) {
+    console.warn('status fetch failed:', err);
+  }
+}
+
+refreshStatus();
+
+const speedSlider = el('speed-slider');
+if (speedSlider) {
+  speedSlider.addEventListener('input', (ev) => {
+    syncSpeedLabel(ev.target.value);
+  });
+  speedSlider.addEventListener('change', (ev) => {
+    api('/sim/speed', { speed_factor: Number(ev.target.value) });
+  });
+}
+
+// ============================================================================
+// Chart clear helper (called on reset)
+// ============================================================================
+function clearCharts() {
+  [powerChart, socChart, priceChart, kpiChart].forEach(chart => {
+    chart.data.datasets.forEach(ds => { ds.data = []; });
+    chart.data.labels = makeLabels();
+    chart.update();
+  });
+  cumulativeCo2 = 0;
+  prevGridAvail = true;
+  logEntries.length = 0;
+  renderLog();
+  logEvent('ok', 'Charts cleared — simulation restarted');
+}
+
+// ============================================================================
+// REST API calls
+// ============================================================================
+async function api(path, body = null) {
+  try {
+    const opts = body
+      ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      : { method: 'POST' };
+    const r = await fetch(path, opts);
+    if (!r.ok) {
+      logEvent('err', `${path} → HTTP ${r.status}`);
+      return;
+    }
+    const j = await r.json();
+    logEvent('ok', `${path} → ${JSON.stringify(j)}`);
+    if (path === '/sim/reset') clearCharts();
+  } catch (err) {
+    logEvent('err', `${path} failed: ${err.message}`);
+    console.error('api error:', path, err);
+  }
+}
+
+function setCtrl(type) {
+  api('/control', { type });
+  ['classical','rl','none'].forEach(t => {
+    const b = el('btn-' + t);
+    if (b) b.classList.toggle('active', t === type);
+  });
+}
+
+// ============================================================================
+// Component Detail Panel
+// ============================================================================
+
+let detailNodeId   = null;
+let detailNodeType = null;
+let detailMetrics  = [];
+let detailChart    = null;
+
+// Key metrics to chart per component type
+const COMP_METRICS = {
+  WindTurbineModel:    [{ key: 'power_kw',              label: 'Power (kW)',         color: '#3b82f6' }],
+  PhotovoltaicModel:   [{ key: 'power_ac_kw',           label: 'AC Power (kW)',      color: '#f59e0b' }],
+  ElectrolyzerModel:   [{ key: 'power_kw',              label: 'Input Power (kW)',   color: '#a78bfa' },
+                        { key: 'h2_kg_step',            label: 'H₂ Output (kg)',     color: '#06b6d4' }],
+  FuelCellModel:       [{ key: 'power_kw',              label: 'Output Power (kW)', color: '#10b981' },
+                        { key: 'h2_consumed_kg_step',   label: 'H₂ Used (kg)',       color: '#f97316' }],
+  HydrogenTankModel:   [{ key: 'soc',                   label: 'SOC',               color: '#06b6d4' },
+                        { key: 'pressure_bar',          label: 'Pressure (bar)',     color: '#a78bfa' }],
+  EnergyLoadModel:     [{ key: 'load_kw',               label: 'Load (kW)',         color: '#f87171' }],
+  GridConnectionModel: [{ key: 'power_kw',              label: 'Grid Power (kW)',   color: '#ef4444' }],
+};
+
+async function openComponentDetail(nodeId) {
+  detailNodeId = nodeId;
+  el('detail-panel').classList.add('open');
+
+  // Optimistic UI while loading
+  el('dp-title').textContent = nodeId.toUpperCase();
+  el('dp-type').textContent  = 'Loading…';
+  el('dp-health').textContent = '—';
+  el('dp-specs').innerHTML = '<tr><td colspan="2" style="color:var(--text2);padding:6px 0">Loading…</td></tr>';
+  el('dp-sensors').innerHTML = '<div style="color:var(--text2);font-size:11px;padding:6px 0">Loading…</div>';
+
+  try {
+    const r = await fetch(`/component/${nodeId}`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+
+    detailNodeType = data.type;
+    detailMetrics  = COMP_METRICS[data.type] || _fallbackMetrics(data.current.values || {});
+
+    // ── Header ──────────────────────────────────────────────────────
+    el('dp-title').textContent = nodeId.toUpperCase() + ' — ' + data.type.replace('Model', '');
+    el('dp-type').textContent  = data.type;
+    _setDetailHealth(data.current.health);
+
+    // ── Specs table ─────────────────────────────────────────────────
+    const entries = Object.entries(data.params || {});
+    el('dp-specs').innerHTML = entries.length === 0
+      ? '<tr><td colspan="2" style="color:var(--text2)">No parameters available.</td></tr>'
+      : entries.map(([k, v]) =>
+          `<tr><td>${k.replace(/_/g,' ')}</td><td>${_fmtParam(v)}</td></tr>`
+        ).join('');
+
+    // ── Chart ────────────────────────────────────────────────────────
+    _buildDetailChart(data.history, detailMetrics);
+
+    // ── Sensors ──────────────────────────────────────────────────────
+    _renderDetailSensors(data.sensors || {});
+
+  } catch (err) {
+    el('dp-type').textContent = 'Error: ' + err.message;
+    console.error('component detail:', err);
+  }
+}
+
+function closeComponentDetail() {
+  el('detail-panel').classList.remove('open');
+  detailNodeId = null;
+}
+
+function _fallbackMetrics(values) {
+  const keys = Object.keys(values);
+  const colors = ['#94a3b8','#06b6d4','#f59e0b','#a78bfa'];
+  return keys.slice(0, 2).map((k, i) => ({ key: k, label: k.replace(/_/g,' '), color: colors[i] }));
+}
+
+function _fmtParam(v) {
+  if (typeof v === 'number') return Number.isInteger(v) ? v.toLocaleString() : v.toFixed(3);
+  return String(v);
+}
+
+function _setDetailHealth(health) {
+  const hEl = el('dp-health');
+  if (health === undefined || health === null) { hEl.textContent = '—'; return; }
+  hEl.textContent = (health * 100).toFixed(1) + '%';
+  hEl.style.color = health > 0.85 ? 'var(--green)' : health > 0.65 ? 'var(--yellow)' : 'var(--red)';
+}
+
+function _buildDetailChart(history, metrics) {
+  if (detailChart) { detailChart.destroy(); detailChart = null; }
+
+  const labels   = history.map(h => formatChartTime(h.ts).axis);
+  const datasets = metrics.map(m => ({
+    label: m.label,
+    data: history.map(h => (h.values && h.values[m.key] !== undefined) ? h.values[m.key] : null),
+    borderColor: m.color,
+    borderWidth: 1.5,
+    pointRadius: 0,
+    fill: false,
+    spanGaps: true,
+  }));
+
+  detailChart = new Chart(el('dp-chart'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 8, padding: 6 } } },
+      scales: {
+        x: { display: true, grid: { color: '#1f2937' }, ticks: { autoSkip: true, maxTicksLimit: 5 } },
+        y: { grid: { color: '#1f2937' }, ticks: { maxTicksLimit: 5 } }
+      }
+    }
+  });
+}
+
+function _renderDetailSensors(sensors) {
+  const container = el('dp-sensors');
+  const entries = Object.entries(sensors);
+  if (entries.length === 0) {
+    container.innerHTML = '<div style="color:var(--text2);font-size:11px;padding:6px 0">No sensors linked to this component.</div>';
+    return;
+  }
+  const header = `<div class="sensor-header">
+    <span class="sensor-id">Sensor</span>
+    <span class="sensor-val" style="text-align:right">Reading</span>
+    <span class="sensor-true">True val</span>
+    <span class="sensor-q-track" style="background:none;flex:1;text-align:center;font-size:9px">Quality</span>
+    <span class="sensor-status">Status</span>
+  </div>`;
+  container.innerHTML = header + entries.map(([sid, s]) => _sensorRowHtml(sid, s)).join('');
+}
+
+function _sensorRowHtml(sid, s) {
+  const qPct  = Math.round((s.quality || 0) * 100);
+  const qCol  = qPct > 80 ? 'var(--green)' : qPct > 50 ? 'var(--yellow)' : 'var(--red)';
+  const stKey = s.status || 'OK';
+  const stCls = stKey === 'OK' ? 's-ok' : (stKey.startsWith('FAULT') ? 's-fault' : 's-degraded');
+  const shortId = sid.split('.').slice(1).join('.') || sid;
+  const valStr  = (s.value !== null && s.value !== undefined) ? s.value.toFixed(3) : '—';
+  const trueStr = (s.true_value !== null && s.true_value !== undefined) ? s.true_value.toFixed(3) : '—';
+  return `<div class="sensor-row">
+    <span class="sensor-id" title="${sid}">${shortId}</span>
+    <span class="sensor-val">${valStr}</span>
+    <span class="sensor-true">${trueStr}</span>
+    <div class="sensor-q-track"><div class="sensor-q-fill" style="width:${qPct}%;background:${qCol}"></div></div>
+    <span class="sensor-status ${stCls}">${stKey}</span>
+  </div>`;
+}
+
+// Called on every WS message to live-update the open panel
+function updateDetailPanel(data) {
+  if (!detailNodeId) return;
+  if (!el('detail-panel').classList.contains('open')) return;
+
+  const nodeData = data.nodes && data.nodes[detailNodeId];
+  if (nodeData) {
+    // Health
+    _setDetailHealth(nodeData.health);
+
+    // Push new point to detail chart
+    if (detailChart && data.ts && detailMetrics.length > 0) {
+      const label = formatChartTime(data.ts).axis;
+      detailChart.data.labels.push(label);
+      detailChart.data.datasets.forEach((ds, i) => {
+        const m = detailMetrics[i];
+        const v = (m && nodeData.values && nodeData.values[m.key] !== undefined)
+          ? nodeData.values[m.key] : null;
+        ds.data.push(v);
+      });
+      if (detailChart.data.labels.length > MAX_POINTS) {
+        detailChart.data.labels.shift();
+        detailChart.data.datasets.forEach(ds => ds.data.shift());
+      }
+      detailChart.update();
+    }
+  }
+
+  // Live-refresh sensor rows
+  if (data.sensors) {
+    const nodeSensors = Object.fromEntries(
+      Object.entries(data.sensors).filter(([k]) => k.startsWith(detailNodeId + '.'))
+    );
+    if (Object.keys(nodeSensors).length > 0) {
+      _renderDetailSensors(nodeSensors);
+    }
+  }
+}
+</script>
+</body>
+</html>

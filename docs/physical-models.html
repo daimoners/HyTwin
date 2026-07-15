@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2 · Physical Models — HyTwin 2.0</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    MathJax = {
+      tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']], tags: 'ams' },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <img src="../HyTwin_Logo.png" alt="HyTwin logo" class="logo-img">
+    <div class="product">HyTwin 2.0</div>
+    <div class="version">v2.0.0</div>
+    <div class="subtitle">Technical Reference Manual</div>
+  </div>
+  <div class="sidebar-section">Introduction</div>
+  <a href="index.html">Overview</a>
+  <div class="sidebar-section">Chapters</div>
+  <a href="architecture.html">1 · System Architecture</a>
+  <a href="physical-models.html" class="active">2 · Physical Models</a>
+  <a href="physical-models.html#wind" class="sub-link">Wind Turbine</a>
+  <a href="physical-models.html#pv" class="sub-link">Photovoltaic</a>
+  <a href="physical-models.html#el" class="sub-link">Electrolyzer</a>
+  <a href="physical-models.html#fc" class="sub-link">Fuel Cell</a>
+  <a href="physical-models.html#tank" class="sub-link">H₂ Tank</a>
+  <a href="physical-models.html#load" class="sub-link">Energy Load</a>
+  <a href="physical-models.html#grid" class="sub-link">Grid Connection</a>
+  <a href="physical-models.html#cost" class="sub-link">Energy Cost</a>
+  <a href="physical-models.html#links" class="sub-link">Inter-Site Links</a>
+  <a href="physical-models.html#weather" class="sub-link">Weather Model</a>
+  <a href="digital-twin.html">3 · Digital Twin</a>
+  <a href="virtual-sensors.html">4 · Virtual Sensors</a>
+  <a href="network-layer.html">5 · Network Layer</a>
+  <a href="rl-environment.html">6 · Reinforcement Learning</a>
+  <a href="simulation-engine.html">7 · Dashboard</a>
+  <a href="configuration-reference.html">8 · Configuration Reference</a>
+  <a href="usage-guide.html">9 · Usage Guide <span class="start-here">Start here</span></a>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="badge">CHAPTER 2</div>
+    <h1>Physical Models</h1>
+    <p>The six per-site component models, the two inter-site link models,
+       and the weather model that drives them all — physical rationale,
+       equations, and configuration parameters.</p>
+  </div>
+
+  <div class="content">
+
+    <h2 id="base">Common Interface: <code>BaseModel</code></h2>
+    <p>All models inherit from <code>BaseModel</code> and share the same
+       interface:</p>
+    <pre><code>class BaseModel:
+    def step(self, dt: float, context: dict) -> ModelState: ...
+    def reset(self) -> None: ...
+    @property
+    def component_id(self) -> str: ...
+    @property
+    def params(self) -> dict: ...</code></pre>
+    <p><code>ModelState</code> is a dataclass containing:</p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>timestamp</code></td><td><code>datetime</code></td><td>Computation instant</td></tr>
+        <tr><td><code>component_id</code></td><td><code>str</code></td><td>Node identifier</td></tr>
+        <tr><td><code>values</code></td><td><code>dict[str, float]</code></td><td>Model output (key → value)</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h2 id="wind">2.1 Wind Turbine — <code>WindTurbineModel</code></h2>
+    <h3>Rationale</h3>
+    <p>A variable-speed turbine model with:</p>
+    <ul>
+      <li>Analytical power coefficient curve $C_p(\lambda, \beta)$</li>
+      <li>Air-density correction for altitude and temperature (ISA)</li>
+      <li>Vertical wind-shear profile (power law)</li>
+      <li>Additive stochastic turbulence on hub-height wind speed</li>
+    </ul>
+
+    <h3>Power coefficient model</h3>
+    <p>Analytical approximation from <strong>Heier (2014)</strong>:</p>
+    <div class="eq">
+      $$C_p(\lambda, \beta) = 0.5176 \left(\frac{116}{\lambda_i} - 0.4\beta - 5\right)
+      e^{-21/\lambda_i} + 0.0068\lambda$$
+    </div>
+    <p>where:</p>
+    <div class="eq">
+      $$\frac{1}{\lambda_i} = \frac{1}{\lambda + 0.08\beta} - \frac{0.035}{\beta^3 + 1}$$
+    </div>
+    <p>with the Betz limit constraint: $C_p \leq 0.593$.</p>
+
+    <h3>Wind shear</h3>
+    <p>Hub-height wind speed is derived from the reference-height
+       (anemometer) measurement via the <strong>power law</strong> (shear
+       exponent $\alpha = 0.14$ for an onshore site):</p>
+    <div class="eq">
+      $$v_{\text{hub}} = v_{\text{ref}} \left(\frac{z_h}{z_r}\right)^\alpha$$
+    </div>
+
+    <h3>Electrical power</h3>
+    <div class="eq">
+      $$P_{\text{el}} =
+      \begin{cases}
+      0 & v < v_{\text{ci}} \text{ or } v > v_{\text{co}} \\
+      P_{\text{rated}} & v \geq v_{\text{rated}} \\
+      \frac{1}{2}\rho A v_{\text{hub}}^3 C_p \;\eta_{\text{gen}} \cdot \frac{\rho}{\rho_0}
+      & v_{\text{ci}} \leq v < v_{\text{rated}}
+      \end{cases}$$
+    </div>
+    <p>where the air-density correction uses the <strong>ISA hypsometric
+       formula</strong>:</p>
+    <div class="eq">
+      $$\rho = \frac{P_0}{R_{\text{air}} T_K} \left(1 - \frac{0.0065 \cdot z}{T_0}\right)^{5.2561}$$
+    </div>
+
+    <h4>Configuration parameters</h4>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Parameter</th><th>Unit</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>rotor_diameter_m</code></td><td>m</td><td>—</td><td>Rotor diameter</td></tr>
+        <tr><td><code>hub_height_m</code></td><td>m</td><td>80</td><td>Hub height</td></tr>
+        <tr><td><code>rated_power_kw</code></td><td>kW</td><td>—</td><td>Rated power</td></tr>
+        <tr><td><code>v_cut_in</code></td><td>m/s</td><td>3.0</td><td>Cut-in speed</td></tr>
+        <tr><td><code>v_rated</code></td><td>m/s</td><td>12.0</td><td>Rated speed</td></tr>
+        <tr><td><code>v_cut_out</code></td><td>m/s</td><td>25.0</td><td>Cut-out speed</td></tr>
+        <tr><td><code>efficiency_gen</code></td><td>—</td><td>0.94</td><td>Generator + gearbox efficiency</td></tr>
+        <tr><td><code>altitude_m</code></td><td>m</td><td>0</td><td>Site altitude</td></tr>
+        <tr><td><code>wake_loss_factor</code></td><td>—</td><td>0.0</td><td>Wake loss fraction</td></tr>
+        <tr><td><code>turbulence_intensity</code></td><td>—</td><td>0.05</td><td>σ/μ of turbulence</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h4>Model output</h4>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Key</th><th>Unit</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>power_kw</code></td><td>kW</td><td>Net electrical power</td></tr>
+        <tr><td><code>energy_kwh_step</code></td><td>kWh</td><td>Energy produced this step</td></tr>
+        <tr><td><code>energy_kwh_total</code></td><td>kWh</td><td>Cumulative energy</td></tr>
+        <tr><td><code>wind_speed_hub_ms</code></td><td>m/s</td><td>Computed hub-height speed</td></tr>
+        <tr><td><code>wind_speed_ref_ms</code></td><td>m/s</td><td>Input reference speed</td></tr>
+        <tr><td><code>available</code></td><td>0/1</td><td>Whether the turbine is operating in range</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><strong>References</strong>: Burton et al. (2011) <em>Wind Energy
+       Handbook</em>, Wiley; IEC 61400-12-1:2017.</p>
+
+    <h2 id="pv">2.2 Photovoltaic Array — <code>PhotovoltaicModel</code></h2>
+    <h3>Rationale</h3>
+    <p>The full chain from solar irradiance to AC power delivered to the
+       grid:</p>
+    <ol>
+      <li>Plane-of-array (POA) irradiance with beam/diffuse/reflected decomposition</li>
+      <li>Cell temperature via the NOCT model</li>
+      <li>DC power with the $P_{\max}$ thermal coefficient</li>
+      <li>Inverter efficiency via a European efficiency curve</li>
+    </ol>
+
+    <h3>Plane-of-array (POA) irradiance</h3>
+    <div class="eq">
+      $$G_{\text{POA}} = G_{\text{beam}} \cdot \text{IAM}(\theta) + G_{\text{diff}} + G_{\text{refl}}$$
+    </div>
+    <ul>
+      <li><strong>Beam</strong> (direct component on the tilted plane): $G_{\text{beam}} = \text{DNI} \cdot \cos\theta_i$</li>
+      <li><strong>Angle of incidence</strong> $\theta_i$: $\cos\theta_i = \cos z \cos\beta + \sin z \sin\beta \cos(\psi_s - \psi_p)$, with $z$ = zenith, $\beta$ = panel tilt, $\psi$ = azimuth</li>
+      <li><strong>IAM (ASHRAE)</strong>, correcting for glass-surface reflection: $\text{IAM} = 1 - b_0 \left(\frac{1}{\cos\theta_i} - 1\right)$</li>
+      <li><strong>Isotropic diffuse</strong>: $G_{\text{diff}} = G_{\text{DHI}} \frac{1+\cos\beta}{2}$</li>
+      <li><strong>Ground-reflected</strong> (albedo 0.2): $G_{\text{refl}} = G_{\text{GHI}} \cdot 0.2 \frac{1-\cos\beta}{2}$</li>
+    </ul>
+
+    <h3>Cell temperature (NOCT)</h3>
+    <div class="eq">
+      $$T_{\text{cell}} = T_{\text{amb}} + \frac{\text{NOCT} - 20}{800} \cdot G_{\text{POA}} \cdot \frac{9.5}{5.7 + 3.8 v_w}$$
+    </div>
+
+    <h3>DC power</h3>
+    <div class="eq">
+      $$P_{\text{DC}} = N \cdot A \cdot G_{\text{POA}} \cdot \eta_{\text{STC}} \cdot [1 + \alpha_T(T_{\text{cell}} - 25)] \cdot (1 - \delta_{\text{soil}}) \cdot (1 - \delta_{\text{deg}} \cdot t)$$
+    </div>
+    <p>where $\alpha_T$ is the $P_{\max}$ thermal coefficient (typically
+       $-0.004$/°C).</p>
+
+    <h3>Inverter efficiency</h3>
+    <p>A European efficiency curve approximated by a 4th-order polynomial
+       in the load ratio $\ell = P_{\text{DC}} / P_{\text{rated}}$:</p>
+    <div class="eq">
+      $$\eta_{\text{inv}}(\ell) = -0.0162\ell^4 + 0.0499\ell^3 - 0.0518\ell^2 + 0.0237\ell + 0.9713$$
+    </div>
+    <p>Peak ~97% at rated load; falls off quickly at low loads.</p>
+
+    <h4>Configuration parameters</h4>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Parameter</th><th>Unit</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>n_panels</code></td><td>—</td><td>1</td><td>Number of panels</td></tr>
+        <tr><td><code>panel_area_m2</code></td><td>m²</td><td>1.7</td><td>Area per panel</td></tr>
+        <tr><td><code>eta_stc</code></td><td>—</td><td>0.20</td><td>STC efficiency</td></tr>
+        <tr><td><code>temp_coeff_pmax</code></td><td>1/°C</td><td>−0.004</td><td>$P_{\max}$ thermal coefficient</td></tr>
+        <tr><td><code>noct_c</code></td><td>°C</td><td>47</td><td>NOCT</td></tr>
+        <tr><td><code>rated_power_kw</code></td><td>kW</td><td>calc.</td><td>Rated DC power</td></tr>
+        <tr><td><code>soiling_loss</code></td><td>—</td><td>0.02</td><td>Soiling loss (2%)</td></tr>
+        <tr><td><code>degradation_per_year</code></td><td>1/yr</td><td>0.005</td><td>Annual degradation (0.5%)</td></tr>
+        <tr><td><code>tilt_deg</code></td><td>°</td><td>30</td><td>Tilt</td></tr>
+        <tr><td><code>azimuth_deg</code></td><td>°</td><td>180</td><td>Azimuth (180 = South)</td></tr>
+        <tr><td><code>iam_b0</code></td><td>—</td><td>0.05</td><td>ASHRAE IAM coefficient</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><strong>References</strong>: De Soto et al. (2006) <em>Solar
+       Energy</em>; Duffie &amp; Beckman (2013).</p>
+
+    <h2 id="el">2.3 PEM Electrolyzer — <code>ElectrolyzerModel</code></h2>
+    <h3>Rationale</h3>
+    <p>The proton-exchange-membrane (PEM) electrolyzer is the key
+       component converting surplus renewable energy into green hydrogen.
+       The model implements the full polarisation curve with three
+       distinct overpotentials.</p>
+
+    <h3>Cell voltage</h3>
+    <div class="eq">
+      $$V_{\text{cell}} = V_{\text{rev}} + \eta_{\text{act}} + \eta_{\text{ohm}} + \eta_{\text{conc}}$$
+    </div>
+    <p><strong>Reversible voltage</strong> (temperature-dependent, linear
+       approximation of the Nernst potential):
+       $V_{\text{rev}} = 1.229 - 9.0 \times 10^{-4}(T - 298.15)$ [V]</p>
+    <p><strong>Activation overpotential</strong> (simplified
+       Butler-Volmer): $\eta_{\text{act}} = \frac{RT}{\alpha_a F}
+       \ln\left(\frac{i}{i_0}\right)$, with $\alpha_a = 0.5$, $i_0 =
+       10^{-3}$ A/cm² (anodic exchange current density).</p>
+    <p><strong>Ohmic overpotential</strong> (membrane resistance, Ohm's
+       law): $\eta_{\text{ohm}} = i \cdot R_{\text{mem}}$,
+       $R_{\text{mem}}$ in Ω·cm² (ASR).</p>
+    <p><strong>Concentration overpotential</strong> (mass transport):
+       $\eta_{\text{conc}} = -\frac{RT}{2F} \ln\left(1 -
+       \frac{i}{i_{\text{lim}}}\right)$, with $i_{\text{lim}} = 2.0$
+       A/cm².</p>
+
+    <h3>Newton solver</h3>
+    <p>Given the power setpoint $P$ [W], the model iteratively finds the
+       current density $i$ satisfying $P = N_{\text{cells}} \cdot
+       V_{\text{cell}}(i) \cdot i \cdot A_{\text{cell}}$ via Newton's
+       method with an analytic derivative approximation. Typical
+       convergence in 5–10 iterations, relative error below $10^{-6}$.</p>
+
+    <h3>Hydrogen production (Faraday's law)</h3>
+    <div class="eq">
+      $$\dot{m}_{\text{H}_2} = \frac{I \cdot N_{\text{cells}}}{N_e \cdot F} \cdot M_{\text{H}_2} \cdot \eta_F$$
+    </div>
+    <p>$N_e = 2$ electrons per H₂ molecule, $F = 96485$ C/mol.</p>
+    <p><strong>Faradaic efficiency</strong> (parasitic losses at low
+       current): $\eta_F = \min\!\left(1, \max\!\left(0,\; 1 -
+       e^{-4i + 0.5}\right)\right)$</p>
+
+    <h3>Energy efficiency (HHV)</h3>
+    <div class="eq">
+      $$\eta_{\text{HHV}} = \frac{\dot{m}_{\text{H}_2} \cdot \text{HHV}_{\text{H}_2}}{P_{\text{input}}}$$
+    </div>
+    <p>with $\text{HHV}_{\text{H}_2} = 141.86$ MJ/kg. Typical values:
+       55–70% HHV (48–55% LHV) at partial load.</p>
+
+    <h4>Configuration parameters</h4>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Parameter</th><th>Unit</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>rated_power_kw</code></td><td>kW</td><td>—</td><td>Rated DC power</td></tr>
+        <tr><td><code>n_cells</code></td><td>—</td><td>100</td><td>Cells in series</td></tr>
+        <tr><td><code>cell_area_cm2</code></td><td>cm²</td><td>300</td><td>Active cell area</td></tr>
+        <tr><td><code>membrane_resistance_ohm_cm2</code></td><td>Ω·cm²</td><td>0.17</td><td>Membrane ASR</td></tr>
+        <tr><td><code>i_exchange_A_cm2</code></td><td>A/cm²</td><td>0.001</td><td>Exchange current density</td></tr>
+        <tr><td><code>alpha_a</code></td><td>—</td><td>0.5</td><td>Anodic transfer coefficient</td></tr>
+        <tr><td><code>temperature_c</code></td><td>°C</td><td>60</td><td>Operating temperature</td></tr>
+        <tr><td><code>min_load_fraction</code></td><td>—</td><td>0.05</td><td>Minimum stable load (5%)</td></tr>
+        <tr><td><code>ramp_rate_kw_s</code></td><td>kW/s</td><td>∞</td><td>Ramp limit</td></tr>
+        <tr><td><code>degradation_rate</code></td><td>1/kh</td><td>1×10⁻⁵</td><td>Degradation per 1000 operating hours</td></tr>
+        <tr><td><code>water_flow_l_h_kw</code></td><td>L/(h·kW)</td><td>0.9</td><td>Water consumption</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><strong>References</strong>: Olivier et al. (2017) <em>Int. J.
+       Hydrogen Energy</em>; IRENA (2020).</p>
+
+    <h2 id="fc">2.4 PEM Fuel Cell — <code>FuelCellModel</code></h2>
+    <h3>Rationale</h3>
+    <p>The PEM fuel cell converts hydrogen into electricity, the reverse
+       reaction of electrolysis. It reuses the same polarisation-curve
+       structure as the electrolyzer with losses of different magnitude
+       (the cell operates in the opposite direction).</p>
+
+    <h3>Polarisation curve</h3>
+    <div class="eq">
+      $$V_{\text{cell}} = V_{\text{OCV}} - \eta_{\text{act}} - \eta_{\text{ohm}} - \eta_{\text{conc}}$$
+    </div>
+    <p><strong>OCV (Open Circuit Voltage)</strong> — Nernst equation at
+       atmospheric pressure: $V_{\text{OCV}} = 1.229 - 9.0 \times
+       10^{-4}(T - 298.15)$ [V]</p>
+    <p><strong>Activation loss</strong> (Tafel equation, cathode-dominant):
+       $\eta_{\text{act}} = \frac{RT}{\alpha_c F} \ln\left(\frac{i}{i_0}\right)$,
+       $\alpha_c = 0.4$.</p>
+    <p><strong>Ohmic loss</strong>: $\eta_{\text{ohm}} = i \cdot
+       R_{\text{mem}}$ (typically $R = 0.12$ Ω·cm²).</p>
+    <p><strong>Concentration loss</strong> (cathode mass-transport
+       limitation): $\eta_{\text{conc}} = -\frac{RT}{4F} \ln\left(1 -
+       \frac{i}{i_{\text{lim}}}\right)$, $i_{\text{lim}} = 1.8$ A/cm²
+       (lower than in the electrolyzer).</p>
+
+    <h3>Stack sizing</h3>
+    <p>For a rated power $P$ kW at typical cell voltage $V_c \approx 0.6$ V
+       and current density $i \approx 1$ A/cm²:</p>
+    <div class="eq">
+      $$N_{\text{cells}} \geq \frac{P \times 10^3}{V_c \cdot i \cdot A_{\text{cell}}} = \frac{P \times 10^3}{0.6 \times 1 \times A_{\text{cell}}}$$
+    </div>
+    <p><strong>Example</strong>: for $P = 50$ kW with $A = 200$ cm²:
+       $N_{\min} \approx 417$ cells.</p>
+
+    <h3>H₂ consumption (Faraday's law)</h3>
+    <div class="eq">
+      $$\dot{m}_{\text{H}_2,\text{cons}} = \frac{I \cdot N_{\text{cells}}}{N_e \cdot F} \cdot \frac{M_{\text{H}_2}}{\eta_u}$$
+    </div>
+    <p>where $\eta_u$ is the H₂ utilisation factor (typical 0.80 — 20%
+       unreacted, recirculated or vented).</p>
+
+    <h3>Efficiency (LHV)</h3>
+    <div class="eq">
+      $$\eta_{\text{LHV}} = \frac{P_{\text{el}}}{\dot{m}_{\text{H}_2} \cdot \text{LHV}_{\text{H}_2} / \Delta t}$$
+    </div>
+    <p>with $\text{LHV}_{\text{H}_2} = 119.96$ MJ/kg. Typical values:
+       40–60% LHV.</p>
+
+    <h4>Configuration parameters</h4>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Parameter</th><th>Unit</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>rated_power_kw</code></td><td>kW</td><td>—</td><td>Rated AC power</td></tr>
+        <tr><td><code>n_cells</code></td><td>—</td><td>80</td><td>Cells in series</td></tr>
+        <tr><td><code>cell_area_cm2</code></td><td>cm²</td><td>300</td><td>Active cell area</td></tr>
+        <tr><td><code>membrane_resistance_ohm_cm2</code></td><td>Ω·cm²</td><td>0.12</td><td>Membrane ASR</td></tr>
+        <tr><td><code>i_exchange_A_cm2</code></td><td>A/cm²</td><td>0.001</td><td>Exchange current density</td></tr>
+        <tr><td><code>alpha_c</code></td><td>—</td><td>0.4</td><td>Cathodic transfer coefficient</td></tr>
+        <tr><td><code>temperature_c</code></td><td>°C</td><td>65</td><td>Operating temperature</td></tr>
+        <tr><td><code>h2_utilisation</code></td><td>—</td><td>0.80</td><td>H₂ utilisation factor</td></tr>
+        <tr><td><code>min_load_fraction</code></td><td>—</td><td>0.10</td><td>Minimum stable load (10%)</td></tr>
+        <tr><td><code>ramp_rate_kw_s</code></td><td>kW/s</td><td>∞</td><td>Ramp limit</td></tr>
+        <tr><td><code>degradation_rate</code></td><td>1/kh</td><td>2×10⁻⁵</td><td>Degradation per 1000 h</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><strong>References</strong>: Larminie &amp; Dicks (2003) <em>Fuel
+       Cell Systems Explained</em>, Wiley; DOE Targets.</p>
+
+    <h2 id="tank">2.5 Hydrogen Tank — <code>HydrogenTankModel</code></h2>
+    <h3>Rationale</h3>
+    <p>Type-IV storage (composite material, up to 700 bar) is modelled with
+       the <strong>Van der Waals</strong> equation of state instead of the
+       ideal gas law, since real deviations become significant above
+       100 bar (≈15–20% error vs. ideal gas at 700 bar, 20 °C).</p>
+
+    <h3>Van der Waals equation of state</h3>
+    <div class="eq">
+      $$\left(P + \frac{a}{v_m^2}\right)(v_m - b) = RT$$
+    </div>
+    <p>where $v_m = V / n$ is the molar volume [m³/mol], and for hydrogen:
+       $a = 0.2476 \times 10^{-3}$ Pa·m⁶/mol², $b = 26.61 \times 10^{-6}$
+       m³/mol.</p>
+    <p><code>_vdw_n_from_P(P, V, T)</code> solves for $n$ given $P$ via
+       Newton's method (typically &lt; 50 iterations).</p>
+
+    <h3>State of charge (SOC)</h3>
+    <div class="eq">
+      $$\text{SOC} = \frac{n - n_{\min}}{n_{\max} - n_{\min}}, \qquad m_{\text{H}_2} = n \cdot M_{\text{H}_2}\ [\text{kg}]$$
+    </div>
+    <p>$n_{\min}$ and $n_{\max}$ correspond to $P_{\min}$ and $P_{\max}$,
+       computed at construction time.</p>
+
+    <h3>Permeation losses (boil-off)</h3>
+    <div class="eq">
+      $$\dot{m}_{\text{boil}} = m_{\text{H}_2} \cdot \frac{\delta_{\text{day}}}{86400} \cdot dt$$
+    </div>
+    <p>$\delta_{\text{day}}$ is the daily loss rate (typically 0 for
+       compressed ambient-temperature storage; relevant for cryogenic
+       storage).</p>
+
+    <h3>Operating limits</h3>
+    <p>Charge/discharge are constrained by: max flow
+       (<code>max_charge_rate_kg_s</code>,
+       <code>max_discharge_rate_kg_s</code>), pressure bounds
+       ($P_{\min} \leq P \leq P_{\max}$), and saturation (cannot charge
+       beyond capacity nor discharge below empty).</p>
+
+    <h4>Configuration parameters</h4>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Parameter</th><th>Unit</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>volume_m3</code></td><td>m³</td><td>—</td><td>Internal geometric volume</td></tr>
+        <tr><td><code>max_pressure_bar</code></td><td>bar</td><td>700</td><td>Maximum design pressure</td></tr>
+        <tr><td><code>min_pressure_bar</code></td><td>bar</td><td>5</td><td>Minimum operating pressure</td></tr>
+        <tr><td><code>initial_soc</code></td><td>—</td><td>0.5</td><td>Initial SOC</td></tr>
+        <tr><td><code>temperature_c</code></td><td>°C</td><td>20</td><td>Gas temperature</td></tr>
+        <tr><td><code>max_charge_rate_kg_s</code></td><td>kg/s</td><td>∞</td><td>Max charge flow</td></tr>
+        <tr><td><code>max_discharge_rate_kg_s</code></td><td>kg/s</td><td>∞</td><td>Max discharge flow</td></tr>
+        <tr><td><code>boiloff_rate_per_day</code></td><td>1/d</td><td>0.0</td><td>Daily boil-off rate</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><strong>References</strong>: Colozza (2002) NASA/TM-2002-211867;
+       ISO 15869:2009.</p>
+
+    <h2 id="load">2.6 Energy Load — <code>EnergyLoadModel</code></h2>
+    <h3>Rationale</h3>
+    <p>Realistic consumption profiles for multiple demand types, with
+       multi-scale temporal variability including the Italian
+       weekday/weekend/holiday calendar.</p>
+
+    <h3>Profile structure</h3>
+    <div class="eq">
+      $$P_{\text{load}} = P_{\text{base}} \cdot f_{\text{diurnal}}(h) \cdot f_{\text{seasonal}}(d) \cdot f_{\text{weekday}} \cdot (1 + \xi) \cdot (1 - \text{DR})$$
+    </div>
+    <p><strong>Diurnal profile</strong> for <code>residential</code> (two
+       Gaussian peaks):</p>
+    <div class="eq">
+      $$f_{\text{diurnal}}(h) = 0.25 + 0.6\,e^{-\frac{(h-7)^2}{4.5}} + 1.0\,e^{-\frac{(h-20)^2}{8}}$$
+    </div>
+    <p><strong>Seasonal factor</strong>: a dual-hump curve reflecting both
+       winter heating and summer air-conditioning demand (not a single
+       annual cosine).</p>
+    <p><strong>Weekday/weekend/holiday factor</strong>: reduced load on
+       weekends and on Italian national holidays (including movable
+       Easter/Pasquetta), plus a distinct August industrial-shutdown
+       factor for <code>industrial</code> profiles.</p>
+    <p><strong>Gaussian noise</strong>: $\xi \sim \mathcal{N}(0,
+       \sigma^2_{\text{noise}})$</p>
+    <p><strong>Demand response</strong>: reduction of up to
+       <code>demand_response_factor</code> (default 15%) of instantaneous
+       load, driven by the control/RL layer.</p>
+
+    <h3>Diurnal profiles by type</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Type</th><th>Shape</th><th>Peaks</th></tr></thead>
+      <tbody>
+        <tr><td><code>residential</code></td><td>2 Gaussians + baseline</td><td>Morning ~07:00, evening ~20:00</td></tr>
+        <tr><td><code>industrial</code></td><td>Flat profile</td><td>High 07:00–22:00, night −60%</td></tr>
+        <tr><td><code>commercial</code></td><td>Ramp + plateau</td><td>High 09:00–18:00, evening 50%, night 15%</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h4>Configuration parameters</h4>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Parameter</th><th>Unit</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>base_load_kw</code></td><td>kW</td><td>—</td><td>Average load at peak hour</td></tr>
+        <tr><td><code>profile_type</code></td><td>str</td><td><code>residential</code></td><td>Profile type</td></tr>
+        <tr><td><code>noise_std_fraction</code></td><td>—</td><td>0.03</td><td>Noise σ (3% of load)</td></tr>
+        <tr><td><code>seasonal_amplitude</code></td><td>—</td><td>0.10</td><td>Seasonal variation amplitude</td></tr>
+        <tr><td><code>demand_response_factor</code></td><td>—</td><td>0.15</td><td>Max DR reduction (15%)</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><strong>References</strong>: IEEE Std 1459-2010; ENTSO-E consumption
+       profiles.</p>
+
+    <h2 id="grid">2.7 Grid Connection — <code>GridConnectionModel</code></h2>
+    <p>Each site has its own connection to the national grid, with
+       independent import/export capacity limits, stochastic outages (mean
+       outage duration and daily outage rate), ramp-rate limiting, and a
+       carbon intensity factor used for CO₂ KPIs.</p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Parameter</th><th>Unit</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>max_import_kw</code> / <code>max_export_kw</code></td><td>kW</td><td>Capacity limits</td></tr>
+        <tr><td><code>base_availability</code></td><td>—</td><td>Baseline probability the connection is up</td></tr>
+        <tr><td><code>outage_mean_h</code></td><td>h</td><td>Mean outage duration</td></tr>
+        <tr><td><code>outage_rate_per_day</code></td><td>1/d</td><td>Expected number of outages per day</td></tr>
+        <tr><td><code>ramp_rate_kw_s</code></td><td>kW/s</td><td>Max change in exchanged power</td></tr>
+        <tr><td><code>grid_carbon_factor</code></td><td>kgCO₂/kWh</td><td>Carbon intensity of imported energy</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h2 id="cost">2.8 Energy Cost — <code>EnergyCostModel</code></h2>
+    <p>Models the Italian day-ahead market (PUN) tariff structure per
+       site, including:</p>
+    <ul>
+      <li><strong>F1/F2/F3</strong> peak/shoulder/off-peak tariff bands</li>
+      <li>The <strong>Italian national holiday calendar</strong>,
+          including the movable Easter Monday (Pasquetta), applied to the
+          tariff-band schedule</li>
+      <li>A <strong>merit-order renewable-abundance discount</strong>: local
+          price softens when the site's own renewable output is high,
+          approximating merit-order effects</li>
+      <li>Daily price noise, a seasonal trend, and stochastic price spikes
+          (<code>spike_prob_per_day</code>, <code>spike_multiplier</code>,
+          <code>spike_duration_steps</code>)</li>
+      <li><code>sell_ratio</code>: fraction of the buy price paid for
+          exported energy</li>
+    </ul>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Parameter</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>f1_price</code>, <code>f2_price</code>, <code>f3_price</code></td><td>€/kWh tariff bands</td></tr>
+        <tr><td><code>price_volatility</code></td><td>Daily price noise amplitude</td></tr>
+        <tr><td><code>seasonal_amplitude</code></td><td>Seasonal trend amplitude</td></tr>
+        <tr><td><code>spike_prob_per_day</code>, <code>spike_multiplier</code>, <code>spike_duration_steps</code></td><td>Price-spike model</td></tr>
+        <tr><td><code>sell_ratio</code></td><td>Export price as a fraction of import price</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h2 id="links">2.9 Inter-Site Link Models</h2>
+    <p>Both link models implement the standard <code>BaseModel</code>
+       interface (<code>step</code>/<code>reset</code>), so they can carry
+       virtual sensors and participate in the digital-twin fusion exactly
+       like any other component — the transport infrastructure is itself
+       part of the digital twin.</p>
+
+    <h3>2.9.1 <code>ElectricLineModel</code></h3>
+    <p>Models a high-voltage electric interconnection between two sites.</p>
+    <ul>
+      <li><strong>Input</strong> (context): <code>power_request_kw</code>
+          (signed — sign gives direction).</li>
+      <li><strong>Physics</strong>: resistive loss proportional to
+          <code>loss_per_1000km · length_km</code>, saturation at
+          <code>max_power_mw</code>, ramp-rate limiting, and an optional
+          stochastic-outage model reusing the same logic as
+          <code>GridConnectionModel</code>.</li>
+      <li><strong>Output</strong>: <code>power_in_kw</code>,
+          <code>power_out_kw</code>, <code>loss_kw</code>,
+          <code>utilization</code>, <code>available</code>.</li>
+    </ul>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Parameter</th><th>Unit</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>max_power_mw</code></td><td>MW</td><td>50</td><td>Thermal transfer capacity (<code>max_power_kw</code> also accepted)</td></tr>
+        <tr><td><code>length_km</code></td><td>km</td><td>100</td><td>Line length (auto-filled from site coordinates if omitted)</td></tr>
+        <tr><td><code>loss_per_1000km</code></td><td>—</td><td>0.06</td><td>Fractional resistive loss per 1000 km</td></tr>
+        <tr><td><code>bidirectional</code></td><td>bool</td><td>true</td><td>Allow reverse flow</td></tr>
+        <tr><td><code>ramp_rate_kw_s</code></td><td>kW/s</td><td>∞</td><td>Max change in transferred power</td></tr>
+        <tr><td><code>outage_rate_per_day</code>, <code>outage_mean_h</code></td><td>—</td><td>0</td><td>Optional stochastic line-fault model</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>2.9.2 <code>H2PipelineModel</code></h3>
+    <p>Models a hydrogen pipeline between two sites, including
+       compression energy and transport delay.</p>
+    <ul>
+      <li><strong>Input</strong> (context):
+          <code>flow_request_kg_h</code> at the sending node.</li>
+      <li><strong>Physics</strong>: saturation at
+          <code>max_flow_kg_h</code>, <strong>compression energy</strong>
+          (<code>compressor_spec_kwh_per_kg</code> → an additional
+          electric load at the source site), a FIFO transport delay
+          derived from <code>length_km / transport_velocity_ms</code>, and
+          a line-pack buffer (<code>line_pack_capacity_kg</code>) acting as
+          a small in-transit reservoir.</li>
+      <li><strong>Output</strong>: <code>flow_kg_h</code>,
+          <code>compressor_power_kw</code>, <code>linepack_kg</code>,
+          <code>delivered_kg_h</code>.</li>
+    </ul>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Parameter</th><th>Unit</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>max_flow_kg_h</code></td><td>kg/h</td><td>300</td><td>Max injection flow</td></tr>
+        <tr><td><code>length_km</code></td><td>km</td><td>100</td><td>Pipeline length (auto-filled if omitted)</td></tr>
+        <tr><td><code>diameter_m</code></td><td>m</td><td>0.4</td><td>Informative only in the current flow model</td></tr>
+        <tr><td><code>compressor_spec_kwh_per_kg</code></td><td>kWh/kg</td><td>2.0</td><td>Compression energy per kg injected</td></tr>
+        <tr><td><code>line_pack_capacity_kg</code></td><td>kg</td><td>800</td><td>Max in-pipe buffered mass</td></tr>
+        <tr><td><code>transport_velocity_ms</code></td><td>m/s</td><td>15</td><td>Effective transport speed (sets delay)</td></tr>
+        <tr><td><code>bidirectional</code></td><td>bool</td><td>false</td><td>Reserved; current model treats the pipe as unidirectional</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h2 id="weather">2.10 Weather — <code>WeatherModel</code> and <code>WeatherField</code></h2>
+
+    <h3><code>WeatherModel</code> (per site)</h3>
+    <p>A standalone stochastic generator producing the environmental
+       variables consumed by every physical model at one site.</p>
+    <p><strong>Wind speed</strong> (Weibull process with autocorrelation) —
+       an AR(1) process in Weibull-variable space:</p>
+    <div class="eq">
+      $$z_t = \phi z_{t-1} + \sqrt{1 - \phi^2}\,\varepsilon_t, \quad \varepsilon_t \sim |\mathcal{N}(0,1)|, \qquad v_t = c \cdot z_t^{1/k}$$
+    </div>
+    <p>with $\phi$ the lag-1 autocorrelation (typically 0.92), giving
+       physically plausible time series without abrupt jumps. Wind
+       climatology has both seasonal and diurnal modulation.</p>
+    <p><strong>Solar irradiance</strong>: solar position (zenith, azimuth)
+       computed exactly for latitude/longitude using
+       <strong>Spencer (1971)</strong> for declination and
+       <strong>Kasten &amp; Young</strong> for air mass. Global Horizontal
+       Irradiance:</p>
+    <div class="eq">
+      $$G_{\text{GHI}} = G_{\text{cs}} \cdot (1 - c_f) + G_{\text{cs}} \cdot c_f \cdot r_c$$
+    </div>
+    <p>where $G_{\text{cs}}$ is clear-sky GHI (simplified Ineichen model),
+       $c_f$ is cloud cover, and $r_c \approx 0.05$ is cloud transmittance.</p>
+    <p><strong>Cloud cover</strong>: seasonally modulated mean with proper
+       AR(1) mean-reversion to its own configured seasonal mean (not a
+       fixed drift to 0.5), so cloud cover behaves like a real climatology
+       rather than decaying to an arbitrary constant.</p>
+    <p><strong>Synoptic coupling</strong>: frontal/stormy conditions boost
+       wind speed and cloud cover together (a shared latent disturbance),
+       instead of treating them as independent processes.</p>
+    <p><strong>Air temperature</strong>: AR(1) process with a sinusoidal
+       seasonal trend:</p>
+    <div class="eq">
+      $$T_t = T_{\text{mean}} + A \sin\!\left(\frac{2\pi (d-172)}{365}\right) + f_{\text{diurnal}}(h) + \rho_T (T_{t-1} - \mu) + \varepsilon_T$$
+    </div>
+
+    <h4>Configuration parameters</h4>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Parameter</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>latitude_deg</code>, <code>longitude_deg</code></td><td>Geographic coordinates</td></tr>
+        <tr><td><code>altitude_m</code></td><td>Altitude (air-density and irradiance correction)</td></tr>
+        <tr><td><code>weibull_k</code>, <code>weibull_c</code></td><td>Weibull shape and scale</td></tr>
+        <tr><td><code>autocorr_wind</code></td><td>Lag-1 wind autocorrelation</td></tr>
+        <tr><td><code>cloud_cover_mean</code></td><td>Mean cloud cover (0–1)</td></tr>
+        <tr><td><code>temp_mean_c</code>, <code>temp_amplitude_c</code></td><td>Mean and seasonal amplitude of T</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3><code>WeatherField</code> (multi-site)</h3>
+    <p>Couples the <code>WeatherModel</code> instances of every site in a
+       network so that nearby sites see correlated weather while distant
+       ones remain closer to independent — matching how real synoptic
+       weather systems move across Italy.</p>
+    <ul>
+      <li>One <code>WeatherModel</code> per site, parameterised from that
+          site's local climatology (<code>location</code> +
+          <code>weather</code> YAML block).</li>
+      <li><strong>Spatial correlation</strong>: a Cholesky-decomposed
+          correlation matrix built from the haversine distance between
+          every pair of sites (<code>correlation_length_km</code>, default
+          300 km) shapes how strongly sites' weather shocks move
+          together.</li>
+      <li><strong>Shared synoptic process</strong>: a common AR(1)
+          disturbance (<code>synoptic_tau_hours</code>, default 18 h)
+          representing a passing weather front, applied with
+          site-dependent weight from the correlation structure — this is
+          what makes wind and cloud cover rise together at nearby sites
+          during a storm, rather than purely independently-sampled
+          series.</li>
+      <li>Exposes <code>step(ts) -&gt; Dict[site_id, weather_dict]</code>.</li>
+    </ul>
+
+    <div class="page-nav">
+      <a href="architecture.html">
+        <div class="nav-label">← Previous</div>
+        <div class="nav-title">1 · System Architecture</div>
+      </a>
+      <a class="next" href="digital-twin.html">
+        <div class="nav-label">Next →</div>
+        <div class="nav-title">3 · Digital Twin</div>
+      </a>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>HyTwin 2.0 Technical Reference Manual — Chapter 2</span>
+    <span>H2_POR Pilot Project</span>
+  </footer>
+
+</div>
+</body>
+</html>

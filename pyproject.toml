@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "hytwin"
+version = "2.0.0"
+description = "HyTwin 2.0 — Pilot Digital Twin for H2-based Energy Grids"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "HYTWIN Team" },
+]
+keywords = ["digital twin", "hydrogen", "energy", "reinforcement learning", "simulation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "License :: OSI Approved :: MIT License",
+]
+
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "pandas>=2.0",
+    "matplotlib>=3.7",
+    "pyyaml>=6.0",
+    "gymnasium>=0.29",
+    "stable-baselines3>=2.1",
+    "sb3-contrib>=2.1",
+    "torch>=2.0",
+    "scikit-learn>=1.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.1",
+    "mypy>=1.5",
+]
+pvlib = ["pvlib>=0.10"]
+wind  = ["windpowerlib>=0.2"]
+extras = ["tensorboard>=2.14", "tqdm>=4.66"]
+
+[project.scripts]
+hytwin-demo = "demos.demo_simulation:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["hytwin*", "demos*"]
+
+[tool.pytest.ini_options]
+testpaths        = ["tests"]
+addopts          = "-v --tb=short"
+filterwarnings   = ["ignore::DeprecationWarning", "ignore::UserWarning"]
+
+[tool.ruff]
+line-length = 100
+select      = ["E", "F", "W", "I"]
+ignore      = ["E501"]
