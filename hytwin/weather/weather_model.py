@@ -29,6 +29,11 @@ import numpy as np
 from ..core.rng import resolve_rng, spawn_one
 
 
+def _norm_cdf(x: float) -> float:
+    """Standard normal CDF Φ(x), via the error function."""
+    return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
+
+
 # ------------------------------------------------------------------
 # Solar geometry helpers
 # ------------------------------------------------------------------
@@ -165,9 +170,20 @@ class WindModel:
         self._autocorr = autocorr
         self._ref_h = wind_ref_height_m
         self._rng = resolve_rng(rng)
-        # Initialise from Weibull distribution
-        self._v: float = self._c * (-math.log(1 - 0.5)) ** (1.0 / self._k)
+        # Latent standard-normal AR(1) state ("Gaussian copula"): x is kept
+        # N(0,1)-distributed by construction, and each step's wind speed is
+        # obtained by mapping x through the normal CDF then the *inverse*
+        # Weibull(k,c) CDF. This is what makes the long-run marginal
+        # distribution of wind_speed_ms actually equal Weibull(k,c) — i.e.
+        # its long-run mean equals c*Gamma(1+1/k), as configured — while
+        # still producing a smooth, autocorrelated time series.
+        self._x: float = float(self._rng.normal())
+        self._v: float = self._weibull_quantile(_norm_cdf(self._x))
         self._direction: float = float(self._rng.uniform(0, 360))
+
+    def _weibull_quantile(self, u: float) -> float:
+        u = min(max(u, 1e-9), 1.0 - 1e-9)
+        return self._c * (-math.log(1.0 - u)) ** (1.0 / self._k)
 
     def set_scale(self, weibull_c: float) -> None:
         """
@@ -184,13 +200,12 @@ class WindModel:
 
     def step(self) -> Dict[str, float]:
         """Generate next wind state."""
-        # AR(1) on standardised Weibull variate z = (V/c)^k
+        # AR(1) in latent normal space, then map through the Weibull(k,c)
+        # inverse CDF — see the constructor docstring for why this is what
+        # keeps the long-run mean wind speed matching c*Gamma(1+1/k).
         sigma = math.sqrt(1 - self._autocorr ** 2)
-        z_curr = (self._v / self._c) ** self._k
-        # Perturbation in normal space
-        z_new = self._autocorr * z_curr + sigma * abs(self._rng.normal())
-        z_new = max(1e-6, z_new)
-        self._v = self._c * z_new ** (1.0 / self._k)
+        self._x = self._autocorr * self._x + sigma * self._rng.normal()
+        self._v = self._weibull_quantile(_norm_cdf(self._x))
 
         # Wind direction — slow drift
         self._direction = (self._direction + self._rng.normal(0, 5.0)) % 360.0
@@ -312,7 +327,7 @@ class WeatherModel:
         wind_state = self._wind.step()
         # Synoptic coupling: a frontal system (synoptic>0) boosts wind speed;
         # an anticyclone (synoptic<0) calms it.
-        wind_synoptic_mult = float(np.clip(1.0 + 0.18 * synoptic, 0.35, 2.2))
+        wind_synoptic_mult = float(np.clip(1.0 + 0.4 * synoptic, 0.35, 2.2))
         wind_state = dict(wind_state)
         wind_state["wind_speed_ms"] = max(0.0, wind_state["wind_speed_ms"] * wind_synoptic_mult)
 
@@ -361,7 +376,10 @@ class WeatherModel:
         dhi = max(0.0, dhi + self._rng.normal(0, 2.0))
 
         # --- Temperature ---
-        seasonal_T = self._T_mean + self._T_amp * math.cos(2 * math.pi * (doy - 15) / 365)
+        # Note the minus sign: unlike wind/cloud (winter-peaking, so they use
+        # +cos(2π(doy-15)/365) which is maximal at day 15), temperature is
+        # SUMMER-peaking — coldest in mid-January, hottest in mid-July.
+        seasonal_T = self._T_mean - self._T_amp * math.cos(2 * math.pi * (doy - 15) / 365)
         diurnal_T = 5.0 * math.sin(math.pi * (timestamp.hour - 6) / 12)
         T_noise_std = math.sqrt(1 - self._T_autocorr ** 2) * 1.5
         self._T = self._T_autocorr * self._T + (1 - self._T_autocorr) * (seasonal_T + diurnal_T) + self._rng.normal(0, T_noise_std)
