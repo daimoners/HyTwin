@@ -1,5 +1,5 @@
 """
-HyTwin 2.0 — Multi-Site Network Control Room (SCADA / EMS / Digital Twin)
+HyTwin — Multi-Site Network Control Room (SCADA / EMS / Digital Twin)
 ========================================================================
 Real-time supervisory dashboard for the whole Italian H2 network.
 
@@ -1038,7 +1038,7 @@ def create_app(
         compare_worker.stop()
         training_worker.stop()
 
-    app = FastAPI(title="HyTwin 2.0 — Network Control Room", lifespan=lifespan)
+    app = FastAPI(title="HyTwin — Network Control Room", lifespan=lifespan)
 
     static_dir = Path(__file__).parent / "static"
     if static_dir.exists():
@@ -1348,7 +1348,7 @@ def run_network_dashboard(
     rl_model_path: str = DEFAULT_RL_MODEL,
 ) -> None:
     print(f"\n{'='*60}")
-    print(f"  HyTwin 2.0 — Italian H2 Network Control Room")
+    print(f"  HyTwin — Italian H2 Network Control Room")
     print(f"{'='*60}")
     print(f"  URL:    http://localhost:{port}")
     print(f"  Config: {config_path}")
@@ -1362,7 +1362,7 @@ def run_network_dashboard(
 if __name__ == "__main__":
     import argparse
 
-    ap = argparse.ArgumentParser(description="HyTwin 2.0 — Italian H2 Network Control Room")
+    ap = argparse.ArgumentParser(description="HyTwin — Italian H2 Network Control Room")
     ap.add_argument("--config", default=DEFAULT_CONFIG, help="scenario YAML (multi-site)")
     ap.add_argument("--port", type=int, default=8060, help="HTTP port (default 8060)")
     ap.add_argument("--dt", type=float, default=600.0, help="step duration [s] (default 600)")

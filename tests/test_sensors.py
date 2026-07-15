@@ -1,7 +1,7 @@
 """
 test_sensors.py
 ===============
-Unit tests for HyTwin 2.0 virtual sensor layer.
+Unit tests for HyTwin virtual sensor layer.
 Run: pytest tests/test_sensors.py -v
 """
 from __future__ import annotations

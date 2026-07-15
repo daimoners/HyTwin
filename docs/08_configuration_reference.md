@@ -1,17 +1,16 @@
-# Configuration Reference — HyTwin 2.0
+# Configuration Reference — HyTwin
 
 Full YAML schema reference for both single-site and multi-site (`network:`)
-scenarios, with real examples drawn from the files under `config/`. Six
+scenarios, with real examples drawn from the files under `config/`. Five
 scenario files ship with the repository:
 
 | File | Sites | Purpose |
 |------|-------|---------|
 | `italy_network_large.yaml` | 7 (Trapani, Cagliari, Taranto, Napoli, Roma, Bologna, Milano) | **Flagship scenario** — the default network, producers in the sunny/windy south & islands, consumers in the industrial north |
 | `italy_network_pilot.yaml` | 3 | Smaller network, used in the RL unit tests |
-| `default_grid.yaml` | 1 (legacy) | Compact single-site pilot |
-| `advanced_grid.yaml` | 1 (legacy) | Single-site + grid connection + energy cost |
-| `advanced_stress.yaml` | 1 (legacy) | Single-site stress-test configuration |
-| `pilot_scenario.yaml` | 1 (legacy) | Single-site scenario used in early tests |
+| `default_grid.yaml` | 1 | Compact single-site pilot |
+| `advanced_grid.yaml` | 1 | Single-site + grid connection + energy cost |
+| `advanced_stress.yaml` | 1 | Single-site stress-test configuration |
 
 All scenario files can be edited and activated from the dashboard's
 **Configuration** screen (`07_dashboard.md` §11) as well as by editing the
@@ -34,8 +33,8 @@ network: { sites: [...], links: [...] }   # multi-site schema
 
 `Scenario.from_yaml` is backward-compatible: if the file has a `network:`
 block, the multi-site layer is built; otherwise the top-level `grid:` block
-is wrapped as a single-site, zero-link `NetworkTopology` automatically — a
-legacy single-site file needs no changes to keep working.
+is wrapped as a single-site, zero-link `NetworkTopology` automatically — an
+existing single-site file needs no changes to keep working.
 
 ---
 

@@ -1,7 +1,7 @@
 """
 demo_rl_training.py
 ===================
-End-to-end RL training demo for HyTwin 2.0.
+End-to-end RL training demo for HyTwin.
 
 Steps
 -----
@@ -31,7 +31,7 @@ sys.path.insert(0, str(ROOT))
 
 # ---------------------------------------------------------------------------
 def _parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="HyTwin 2.0 — RL training demo")
+    p = argparse.ArgumentParser(description="HyTwin — RL training demo")
     p.add_argument("--timesteps", type=int, default=20_000,
                    help="Total training timesteps (default: 20,000)")
     p.add_argument("--eval-eps", type=int, default=3,
@@ -173,7 +173,7 @@ def _plot_results(random_mean: float, trained_mean: float,
     import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(1, 2, figsize=(13, 5))
-    fig.suptitle("HyTwin 2.0 — RL Training Demo", fontsize=13, fontweight="bold")
+    fig.suptitle("HyTwin — RL Training Demo", fontsize=13, fontweight="bold")
 
     # ── Per-step reward for each eval episode ────────────────────────────────
     ax = axes[0]
@@ -210,7 +210,7 @@ def _plot_results(random_mean: float, trained_mean: float,
 def main() -> None:
     args = _parse_args()
     print("=" * 64)
-    print("  HyTwin 2.0 — RL Training Demo")
+    print("  HyTwin — RL Training Demo")
     print("=" * 64)
     print(f"  Algorithm  : {args.algorithm}")
     print(f"  Timesteps  : {args.timesteps:,}")

@@ -2,7 +2,7 @@
 import argparse
 from dashboard import run
 
-parser = argparse.ArgumentParser(description="HyTwin 2.0 Real-Time Dashboard")
+parser = argparse.ArgumentParser(description="HyTwin Real-Time Dashboard")
 parser.add_argument("--config",  default=None,    help="Path to YAML config (default: config/advanced_grid.yaml)")
 parser.add_argument("--port",    type=int, default=8050, help="HTTP port (default: 8050)")
 parser.add_argument("--speed",   type=float, default=0.0, help="Speed factor: 0=max, 1=real-time, N=N× (default: 0)")

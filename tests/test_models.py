@@ -1,7 +1,7 @@
 """
 test_models.py
 ==============
-Unit tests for all HyTwin 2.0 physics models.
+Unit tests for all HyTwin physics models.
 Run: pytest tests/test_models.py -v
 """
 from __future__ import annotations

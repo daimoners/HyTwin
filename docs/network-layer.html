@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>5 · Network Layer — HyTwin 2.0</title>
+  <title>5 · Network Layer — HyTwin</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,8 +11,8 @@
 <nav class="sidebar">
   <div class="sidebar-logo">
     <img src="../HyTwin_Logo.png" alt="HyTwin logo" class="logo-img">
-    <div class="product">HyTwin 2.0</div>
-    <div class="version">v2.0.0</div>
+    <div class="product">HyTwin</div>
+    <div class="version">v1.0.0</div>
     <div class="subtitle">Technical Reference Manual</div>
   </div>
   <div class="sidebar-section">Introduction</div>
@@ -82,7 +82,7 @@
 class SiteSpec:
     id: str
     location: Location            # name, lat, lon, alt_m
-    grid_config: dict             # identical schema to the legacy `grid:` block
+    grid_config: dict             # identical schema to the single-site `grid:` block
     weather_params: dict          # WeatherModel kwargs for this site's climate
     energy_cost: dict             # local market-zone price model config
     sensor_config: list           # optional per-site virtual sensors
@@ -113,7 +113,7 @@ class NetworkTopology:
        coordinates.</p>
     <p><code>Scenario.from_yaml</code> is backward-compatible: a file
        with a <code>network:</code> block builds the multi-site layer;
-       a legacy file with only a top-level <code>grid:</code> block is
+       an existing file with only a top-level <code>grid:</code> block is
        wrapped as a single-site, zero-link <code>NetworkTopology</code>.</p>
 
     <h2 id="schema">5.3 Configuration Schema (YAML)</h2>
@@ -411,7 +411,7 @@ for name, kpis in out.items():
   </div>
 
   <footer>
-    <span>HyTwin 2.0 Technical Reference Manual — Chapter 5</span>
+    <span>HyTwin Technical Reference Manual — Chapter 5</span>
     <span>H2_POR Pilot Project</span>
   </footer>
 

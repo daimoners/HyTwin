@@ -1,14 +1,14 @@
-# Dashboard — Network Control Room — HyTwin 2.0
+# Dashboard — Network Control Room — HyTwin
 
 ## 1. Overview
 
 `dashboard/network_app.py` serves a **FastAPI + WebSocket** real-time web
 dashboard — the "Network Control Room" — that runs, monitors, and controls
 the full multi-site network simulation from a browser. It is the primary,
-recommended way to operate HyTwin. A legacy single-site dashboard
+recommended way to operate HyTwin. A lighter-weight single-site dashboard
 (`dashboard/app.py`, served at `dashboard/static/index.html`) is still
-reachable via `demos/demo_advanced.py --mode dashboard`, but everything in
-this document targets the Network Control Room.
+reachable via `python -m dashboard`, but everything in this document
+targets the Network Control Room.
 
 ```bash
 python -m dashboard.network_app --speed-factor 30

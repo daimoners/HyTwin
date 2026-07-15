@@ -1,5 +1,5 @@
 """
-HyTwin 2.0 — Real-Time Web Dashboard
+HyTwin — Real-Time Web Dashboard
 ======================================
 FastAPI + WebSocket server that runs the advanced simulation in a
 background thread and broadcasts live state to connected browsers.
@@ -317,7 +317,7 @@ def create_app(
             f"Dashboard requires fastapi + uvicorn: pip install fastapi uvicorn\n{e}"
         )
 
-    app = FastAPI(title="HyTwin 2.0 Dashboard")
+    app = FastAPI(title="HyTwin Dashboard")
     worker = SimulationWorker(config_path, dt_seconds, speed_factor, seed)
     active_ws: Set[WebSocket] = set()
 
@@ -447,7 +447,7 @@ def run(
         config_path = str(ROOT / "config" / "advanced_grid.yaml")
 
     print(f"\n{'='*60}")
-    print(f"  HyTwin 2.0 — Real-Time Dashboard")
+    print(f"  HyTwin — Real-Time Dashboard")
     print(f"{'='*60}")
     print(f"  URL:    http://localhost:{port}")
     print(f"  Config: {config_path}")

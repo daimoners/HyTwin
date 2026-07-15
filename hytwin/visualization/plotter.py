@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 def plot_simulation_results(
     records: "pd.DataFrame | List[GridState]",
-    title: str = "HyTwin 2.0 — Simulation Results",
+    title: str = "HyTwin — Simulation Results",
     save_path: Optional[str] = None,
     show: bool = True,
 ) -> plt.Figure:

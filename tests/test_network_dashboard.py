@@ -263,19 +263,40 @@ def test_live_compare_worker_diverges_after_cold_start():
     assert f["kpis"]["none"]["cum_cost"] != f["kpis"]["classical"]["cum_cost"]
 
 
-@pytest.mark.skipif(not _HAS_FASTAPI, reason="fastapi not installed")
-def test_live_compare_endpoints_and_websocket():
+@pytest.mark.skipif(not _HAS_FASTAPI or not _HAS_SB3, reason="fastapi/sb3 not installed")
+def test_live_compare_endpoints_and_websocket(tmp_path):
     import time
     from starlette.testclient import TestClient
     from dashboard.network_app import create_app
 
-    app, _ = create_app()
+    # A fresh checkout ships no pre-trained models (output/ is generated, not
+    # versioned — see docs/09_usage_guide.md for real training runs), so the
+    # 'rl' strategy needs a model trained during the test itself: a very
+    # short smoke run (same mechanism as test_model_registry_and_training_
+    # mechanism above), activated via the normal /api/models/select path.
+    app, _ = create_app(rl_model_path=str(tmp_path / "unused"))
     with TestClient(app) as client:
         assert client.get("/api/live_compare/status").json()["configured"] is False
 
         # Fewer than 2 strategies must be rejected.
         bad = client.post("/api/live_compare/start", json={"strategies": ["classical"], "seed": 1})
         assert bad.status_code == 400
+
+        trained = client.post(
+            "/api/train/start",
+            json={"timesteps": 200, "n_steps": 64, "name": "pytest_live_compare_smoke", "seed": 0},
+        ).json()
+        assert trained["state"] == "running"
+        st = trained
+        for _ in range(60):
+            st = client.get("/api/train/status").json()
+            if st["state"] in ("completed", "error", "stopped"):
+                break
+            time.sleep(1)
+        assert st["state"] == "completed", st
+        rl_path = st["save_path"][:-len(".zip")]
+        select = client.post("/api/models/select", json={"path": rl_path})
+        assert select.status_code == 200, select.json()
 
         started = client.post(
             "/api/live_compare/start",

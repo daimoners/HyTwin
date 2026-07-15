@@ -1,7 +1,7 @@
 """
 demo_sensors.py
 ===============
-Demonstrates HyTwin 2.0 virtual-sensor capabilities:
+Demonstrates HyTwin virtual-sensor capabilities:
 
   1. Gaussian noise + quantisation on a PV power sensor
   2. Slow drift on a H2 pressure sensor
@@ -39,7 +39,7 @@ from hytwin.sensors.sensors import (
 # CLI
 # ---------------------------------------------------------------------------
 def _parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="HyTwin 2.0 — virtual-sensor demo")
+    p = argparse.ArgumentParser(description="HyTwin — virtual-sensor demo")
     p.add_argument("--steps", type=int, default=200)
     p.add_argument("--plot", action="store_true")
     p.add_argument("--save", default="")
@@ -193,7 +193,7 @@ def _make_plot(noise_trio, drift_trio, fault_trio, delay_duo, save_path: str = "
     import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(2, 2, figsize=(14, 9))
-    fig.suptitle("HyTwin 2.0 — Virtual Sensor Showcase", fontsize=14, fontweight="bold")
+    fig.suptitle("HyTwin — Virtual Sensor Showcase", fontsize=14, fontweight="bold")
 
     # ── Noise + Quantisation ─────────────────────────────────────────────────
     ax = axes[0, 0]
@@ -257,7 +257,7 @@ def _make_plot(noise_trio, drift_trio, fault_trio, delay_duo, save_path: str = "
 def main() -> None:
     args = _parse_args()
     print("=" * 64)
-    print("  HyTwin 2.0 — Virtual Sensor Demo")
+    print("  HyTwin — Virtual Sensor Demo")
     print("=" * 64)
 
     noise_trio  = _scenario_noise(args.steps)

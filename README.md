@@ -1,8 +1,8 @@
 <img src="HyTwin_Logo.png" alt="HyTwin logo" width="240">
 
-# HyTwin 2.0 — AI-Controlled Digital Twin for a Multi-Node H2 Energy Network
+# HyTwin — AI-Controlled Digital Twin for a Multi-Node H2 Energy Network
 
-HyTwin 2.0 is a modular, scalable digital-twin framework for a
+HyTwin is a modular, scalable digital-twin framework for a
 **geographically distributed hydrogen (H₂) energy network** — physics-based
 component models, virtual sensors with realistic measurement artifacts, an
 explicit multi-site dispatch layer, reinforcement-learning-based network
@@ -50,8 +50,8 @@ hytwin/
 ├── visualization/       Dashboard plots · Sensor comparison plots
 └── dashboard/           FastAPI + WebSocket real-time web dashboards:
                         network_app.py (multi-node "Network Control Room" —
-                        the primary, recommended dashboard) + a legacy
-                        single-site dashboard reachable via demo_advanced.py
+                        the primary, recommended dashboard) + a lighter-
+                        weight single-site dashboard (`python -m dashboard`)
 ```
 
 Full design rationale and equations: [`docs/`](docs/index.md), starting
@@ -200,18 +200,18 @@ the sidebar always shows an explicit RUNNING / PAUSED state.
 
 Full screen-by-screen reference: [`docs/07_dashboard.md`](docs/07_dashboard.md).
 
-A legacy single-site dashboard remains available via
-`python demos/demo_advanced.py --mode dashboard --port 8050`.
+A lighter-weight single-site dashboard remains available via
+`python -m dashboard --config config/advanced_grid.yaml --port 8050`.
 
 ---
 
 ## Configuration
 
-Scenarios are YAML files under `config/`. Six ship with the repo:
+Scenarios are YAML files under `config/`. Five ship with the repo:
 `italy_network_large.yaml` (flagship 7-node network, the default),
-`italy_network_pilot.yaml` (3-node, used in RL tests), and four legacy
+`italy_network_pilot.yaml` (3-node, used in RL tests), and three
 single-site scenarios (`default_grid.yaml`, `advanced_grid.yaml`,
-`advanced_stress.yaml`, `pilot_scenario.yaml`).
+`advanced_stress.yaml`).
 
 ```yaml
 network:
@@ -239,7 +239,7 @@ network:
 Add a node by duplicating a `- id: ...` site block under `network.sites`
 and giving it a new id; tune sensor fault frequency via each sensor's
 `fault_probability`. A file without a `network:` block is treated as a
-legacy single-site scenario automatically.
+single-site scenario automatically.
 
 Full schema reference: [`docs/08_configuration_reference.md`](docs/08_configuration_reference.md).
 
@@ -257,9 +257,17 @@ environment, sensors, weather/cost realism.
 
 ---
 
-## Legacy single-site demos
+## Demo scripts
+
+Standalone scripts under `demos/` illustrate each layer in isolation —
+useful for a quick, dependency-light look at one subsystem without
+launching the dashboard.
 
 ```bash
+# Multi-node network layer ("grid" mode)
+python demos/demo_network.py --config config/italy_network_pilot.yaml --steps 144
+
+# Single-site mode
 python demos/demo_simulation.py --plot
 python demos/demo_sensors.py --plot
 python demos/demo_digital_twin.py --plot
@@ -267,7 +275,6 @@ python demos/demo_rl_training.py --timesteps 20000 --plot
 python demos/demo_advanced.py --mode simulate --steps 144
 python demos/demo_advanced.py --mode compare --steps 144
 python demos/demo_advanced.py --mode train_rl --timesteps 100000
-python demos/demo_advanced.py --mode dashboard --port 8050
 ```
 
 ---
@@ -290,8 +297,3 @@ Full technical documentation lives in [`docs/`](docs/index.md):
 
 ## Reference
 
-This framework builds on experience from the HYTWIN 1.x series and
-supersedes earlier single-site prototypes with full physics models, a
-virtual sensor layer, model-sensor state fusion, a Gymnasium RL environment
-extended to full network scale, an explicit multi-site dispatch layer, and
-the Network Control Room real-time dashboard.

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>8 · Configuration Reference — HyTwin 2.0</title>
+  <title>8 · Configuration Reference — HyTwin</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,8 +11,8 @@
 <nav class="sidebar">
   <div class="sidebar-logo">
     <img src="../HyTwin_Logo.png" alt="HyTwin logo" class="logo-img">
-    <div class="product">HyTwin 2.0</div>
-    <div class="version">v2.0.0</div>
+    <div class="product">HyTwin</div>
+    <div class="version">v1.0.0</div>
     <div class="subtitle">Technical Reference Manual</div>
   </div>
   <div class="sidebar-section">Introduction</div>
@@ -46,17 +46,16 @@
 
   <div class="content">
 
-    <p>Six scenario files ship with the repository:</p>
+    <p>Five scenario files ship with the repository:</p>
     <div class="table-wrap">
     <table>
       <thead><tr><th>File</th><th>Sites</th><th>Purpose</th></tr></thead>
       <tbody>
         <tr><td><code>italy_network_large.yaml</code></td><td>7 (Trapani, Cagliari, Taranto, Napoli, Roma, Bologna, Milano)</td><td><strong>Flagship scenario</strong> — the default network, producers in the sunny/windy south &amp; islands, consumers in the industrial north</td></tr>
         <tr><td><code>italy_network_pilot.yaml</code></td><td>3</td><td>Smaller network, used in the RL unit tests</td></tr>
-        <tr><td><code>default_grid.yaml</code></td><td>1 (legacy)</td><td>Compact single-site pilot</td></tr>
-        <tr><td><code>advanced_grid.yaml</code></td><td>1 (legacy)</td><td>Single-site + grid connection + energy cost</td></tr>
-        <tr><td><code>advanced_stress.yaml</code></td><td>1 (legacy)</td><td>Single-site stress-test configuration</td></tr>
-        <tr><td><code>pilot_scenario.yaml</code></td><td>1 (legacy)</td><td>Single-site scenario used in early tests</td></tr>
+        <tr><td><code>default_grid.yaml</code></td><td>1</td><td>Compact single-site pilot</td></tr>
+        <tr><td><code>advanced_grid.yaml</code></td><td>1</td><td>Single-site + grid connection + energy cost</td></tr>
+        <tr><td><code>advanced_stress.yaml</code></td><td>1</td><td>Single-site stress-test configuration</td></tr>
       </tbody>
     </table>
     </div>
@@ -79,7 +78,7 @@ network: { sites: [...], links: [...] }   # multi-site schema</code></pre>
        file has a <code>network:</code> block, the multi-site layer is
        built; otherwise the top-level <code>grid:</code> block is
        wrapped as a single-site, zero-link <code>NetworkTopology</code>
-       automatically — a legacy single-site file needs no changes to
+       automatically — an existing single-site file needs no changes to
        keep working.</p>
 
     <h2 id="single">8.2 Single-Site <code>grid:</code> Schema</h2>
@@ -389,7 +388,7 @@ topo = Scenario.from_yaml("config/italy_network_pilot.yaml").topology()</code></
   </div>
 
   <footer>
-    <span>HyTwin 2.0 Technical Reference Manual — Chapter 8</span>
+    <span>HyTwin Technical Reference Manual — Chapter 8</span>
     <span>H2_POR Pilot Project</span>
   </footer>
 

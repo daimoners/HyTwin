@@ -1,7 +1,7 @@
 """
 test_rl_environment.py
 ======================
-Tests for the HyTwin 2.0 Gymnasium RL environment.
+Tests for the HyTwin Gymnasium RL environment.
 Run: pytest tests/test_rl_environment.py -v
 """
 from __future__ import annotations

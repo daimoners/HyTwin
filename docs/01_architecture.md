@@ -1,8 +1,8 @@
-# System Architecture — HyTwin 2.0
+# System Architecture — HyTwin
 
 ## 1. Overview
 
-HyTwin 2.0 is structured as a stack of layers, each adding abstraction and
+HyTwin is structured as a stack of layers, each adding abstraction and
 intelligence on top of the previous one. Since the introduction of the
 **network layer**, the stack is best read as single-site building blocks
 (layers 1–3) topped by a multi-site orchestration layer (layer 4) and a

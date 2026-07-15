@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>7 · Dashboard — HyTwin 2.0</title>
+  <title>7 · Dashboard — HyTwin</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,8 +11,8 @@
 <nav class="sidebar">
   <div class="sidebar-logo">
     <img src="../HyTwin_Logo.png" alt="HyTwin logo" class="logo-img">
-    <div class="product">HyTwin 2.0</div>
-    <div class="version">v2.0.0</div>
+    <div class="product">HyTwin</div>
+    <div class="version">v1.0.0</div>
     <div class="subtitle">Technical Reference Manual</div>
   </div>
   <div class="sidebar-section">Introduction</div>
@@ -50,11 +50,11 @@
        WebSocket</strong> real-time web dashboard — the "Network Control
        Room" — that runs, monitors, and controls the full multi-site
        network simulation from a browser. It is the primary, recommended
-       way to operate HyTwin. A legacy single-site dashboard
+       way to operate HyTwin. A lighter-weight single-site dashboard
        (<code>dashboard/app.py</code>, served at
        <code>dashboard/static/index.html</code>) is still reachable via
-       <code>demos/demo_advanced.py --mode dashboard</code>, but
-       everything in this document targets the Network Control Room.</p>
+       <code>python -m dashboard</code>, but everything in this
+       document targets the Network Control Room.</p>
     <pre><code>python -m dashboard.network_app --speed-factor 30
 # then open http://localhost:8060</code></pre>
     <p>CLI flags: <code>--config &lt;path&gt;</code> (defaults to
@@ -307,7 +307,7 @@
   </div>
 
   <footer>
-    <span>HyTwin 2.0 Technical Reference Manual — Chapter 7</span>
+    <span>HyTwin Technical Reference Manual — Chapter 7</span>
     <span>H2_POR Pilot Project</span>
   </footer>
 

@@ -1,4 +1,4 @@
-# Reinforcement Learning — HyTwin 2.0
+# Reinforcement Learning — HyTwin
 
 HyTwin exposes three [Gymnasium](https://gymnasium.farama.org/)-compatible
 environments, from single-site to full network scale. The **network
@@ -185,7 +185,7 @@ meaningful:
    records; look at whether the trend is rising and flattening, not at any
    single point on it.
 
-For the legacy single-site `H2GridEnv`, indicative reference numbers from a
+For the single-site `H2GridEnv`, indicative reference numbers from a
 short PPO run against a random-action baseline (default single-site config,
 20k timesteps) are: mean reward ~506 (random) → ~520 (PPO), mean renewable
 fraction ~0.42 → ~0.51, mean self-sufficiency ~0.65 → ~0.72, H₂ safety

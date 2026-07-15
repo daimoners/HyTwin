@@ -1,4 +1,4 @@
-# Physical Models — HyTwin 2.0
+# Physical Models — HyTwin
 
 This document describes the physical models that make up HyTwin's simulation
 layer: the six per-site component models, the two inter-site link models, and

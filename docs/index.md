@@ -1,6 +1,6 @@
-# HyTwin 2.0 — Technical Documentation
+# HyTwin — Technical Documentation
 
-Welcome to the technical documentation for **HyTwin 2.0**, an AI-controlled
+Welcome to the technical documentation for **HyTwin**, an AI-controlled
 digital twin of a multi-node hydrogen (H₂) energy network. The flagship
 scenario is a 7-node Italian network — physics-based component models,
 virtual sensors with realistic measurement artifacts, an explicit multi-site

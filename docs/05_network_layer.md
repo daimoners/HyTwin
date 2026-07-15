@@ -1,4 +1,4 @@
-# Network Layer — Multi-Site H2 Network — HyTwin 2.0
+# Network Layer — Multi-Site H2 Network — HyTwin
 
 ## 1. Overview
 
@@ -42,7 +42,7 @@ Defined in `hytwin/network/topology.py`.
 class SiteSpec:
     id: str
     location: Location            # name, lat, lon, alt_m
-    grid_config: dict             # identical schema to the legacy `grid:` block
+    grid_config: dict             # identical schema to the single-site `grid:` block
     weather_params: dict          # WeatherModel kwargs for this site's climate
     energy_cost: dict             # local market-zone price model config
     sensor_config: list           # optional per-site virtual sensors
@@ -71,7 +71,7 @@ geodata even if the `weather:` block omits it. When a link's `params` omits
 between the two sites' coordinates.
 
 `Scenario.from_yaml` is backward-compatible: a file with a `network:` block
-builds the multi-site layer; a legacy file with only a top-level `grid:`
+builds the multi-site layer; an existing file with only a top-level `grid:`
 block is wrapped as a single-site, zero-link `NetworkTopology`.
 
 ---

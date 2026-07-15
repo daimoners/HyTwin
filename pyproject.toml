@@ -4,8 +4,8 @@ build-backend = "setuptools.backends.legacy:build"
 
 [project]
 name = "hytwin"
-version = "2.0.0"
-description = "HyTwin 2.0 — Pilot Digital Twin for H2-based Energy Grids"
+version = "1.0.0"
+description = "HyTwin — AI-Controlled Digital Twin for a Multi-Node H2 Energy Network"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

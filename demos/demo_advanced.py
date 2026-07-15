@@ -1,7 +1,7 @@
 """
 demo_advanced.py
 ================
-Comprehensive advanced demo of HyTwin 2.0.
+Comprehensive advanced demo of HyTwin.
 
 NEW FEATURES demonstrated
 --------------------------
@@ -66,7 +66,7 @@ MODEL_DIR = ROOT / "output" / "rl_models"
 
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="HyTwin 2.0 — Advanced multi-source H2 grid demo"
+        description="HyTwin — Advanced multi-source H2 grid demo"
     )
     p.add_argument(
         "--mode", choices=["simulate", "train_rl", "compare", "dashboard"],
@@ -212,7 +212,7 @@ def _compute_kpis(
 
 def mode_simulate(args: argparse.Namespace) -> None:
     print("=" * 70)
-    print("  HyTwin 2.0 — Advanced Simulation  (Classical Controller)")
+    print("  HyTwin — Advanced Simulation  (Classical Controller)")
     print("=" * 70)
 
     scenario = _load_scenario(args.config, args.dt, args.speed_factor)
@@ -308,7 +308,7 @@ def _print_kpis(kpis: Dict[str, float], label: str = "") -> None:
 
 def mode_train_rl(args: argparse.Namespace) -> None:
     print("=" * 70)
-    print("  HyTwin 2.0 — RL Training  (PPO on AdvancedH2GridEnv)")
+    print("  HyTwin — RL Training  (PPO on AdvancedH2GridEnv)")
     print("=" * 70)
 
     try:
@@ -420,7 +420,7 @@ def mode_train_rl(args: argparse.Namespace) -> None:
 
 def mode_compare(args: argparse.Namespace) -> None:
     print("=" * 70)
-    print("  HyTwin 2.0 — Controller Comparison  (Classical vs RL)")
+    print("  HyTwin — Controller Comparison  (Classical vs RL)")
     print("=" * 70)
 
     scenario_cls = _load_scenario(args.config, args.dt, 0.0)
@@ -570,7 +570,7 @@ def _plot_results(
 
     n_runs = len(runs)
     fig = plt.figure(figsize=(16, 12))
-    fig.suptitle("HyTwin 2.0 — Advanced Simulation Results", fontsize=14, fontweight="bold")
+    fig.suptitle("HyTwin — Advanced Simulation Results", fontsize=14, fontweight="bold")
     gs = gridspec.GridSpec(4, n_runs, figure=fig, hspace=0.45, wspace=0.35)
 
     colors = {"Classical": "#2563eb", "RL": "#e11d48", "sim": "#16a34a"}

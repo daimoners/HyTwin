@@ -29,7 +29,7 @@ from hytwin.visualization.plotter import plot_simulation_results
 # CLI
 # ---------------------------------------------------------------------------
 def _parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="HyTwin 2.0 — 24-h simulation demo")
+    p = argparse.ArgumentParser(description="HyTwin — 24-h simulation demo")
     p.add_argument("--config", default=str(ROOT / "config" / "default_grid.yaml"),
                    help="Path to scenario YAML (default: config/default_grid.yaml)")
     p.add_argument("--steps", type=int, default=144, help="Number of time steps (default: 144 = 24 h @ dt=600 s)")
@@ -71,7 +71,7 @@ def main() -> None:
     args = _parse_args()
 
     print("=" * 64)
-    print("  HyTwin 2.0 — Simulation Demo")
+    print("  HyTwin — Simulation Demo")
     print("=" * 64)
 
     # ── Load scenario ────────────────────────────────────────────────────────
@@ -128,7 +128,7 @@ def main() -> None:
             save_path = args.save if args.save else None
             plot_simulation_results(
                 records=records,
-                title=f"HyTwin 2.0 — {scenario.name} (24 h)",
+                title=f"HyTwin — {scenario.name} (24 h)",
                 save_path=save_path,
                 show=args.plot,
             )

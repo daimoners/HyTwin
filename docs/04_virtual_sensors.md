@@ -1,4 +1,4 @@
-# Virtual Sensors — HyTwin 2.0
+# Virtual Sensors — HyTwin
 
 ## 1. Introduction
 

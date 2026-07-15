@@ -1,5 +1,5 @@
 """
-HyTwin 2.0 — H2-based Energy Grid Digital Twin Framework
+HyTwin — H2-based Energy Grid Digital Twin Framework
 =========================================================
 A modular, scalable framework for simulating, monitoring, and optimising
 hydrogen-based energy grids through digital twin technology and reinforcement
@@ -17,5 +17,5 @@ Architecture layers:
   visualization/ — Dashboard and plotting utilities
 """
 
-__version__ = "2.0.0"
+__version__ = "1.0.0"
 __author__ = "HyTwin Development Team"
