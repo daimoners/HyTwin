@@ -7,9 +7,8 @@ run a network simulation, train an AI agent, compare traditional vs. AI
 control, and interpret the results — including how to vary time horizon,
 seed, and network configuration along the way.
 
-All CLI snippets below are run from the repository root
-(`/home/merc/PROJECTS/H2_POR/HYTWIN/2.0`), with the project's virtual
-environment active.
+All CLI snippets below are run from the repository root, with the project's
+virtual environment active.
 
 ---
 

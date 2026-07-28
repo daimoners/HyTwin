@@ -307,7 +307,7 @@ This project is funded under the Italian **Operational Research Plan
 Union – NextGenerationEU**, under the **National Recovery and Resilience
 Plan (NRRP)**.
 
-**Contact:** [daimon.team@gmail.com](mailto:daimon.team@gmail.com)
+**Contact:** [daimoners@gmail.com](mailto:daimoners@gmail.com)
 
 *The views and opinions expressed in this repository are those of the
 authors only and do not necessarily reflect those of the European Union
