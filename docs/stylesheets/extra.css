@@ -1,0 +1,116 @@
+/* ── HyTwin brand palette ───────────────────────────────────────────────────
+   Logo colours:
+     navy background : #0a1628
+     teal (left sun) : #54e9c9
+     lime (AI tagline): #c8f07a
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Custom primary = teal, accent = lime */
+:root {
+  --md-primary-fg-color:        #54e9c9;
+  --md-primary-fg-color--light: #7ef0da;
+  --md-primary-fg-color--dark:  #35c4a6;
+  --md-accent-fg-color:         #c8f07a;
+  --md-accent-fg-color--transparent: #c8f07a26;
+}
+
+/* Dark scheme overrides — navy background */
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color:        #0a1628;
+  --md-default-bg-color--light: #0d1e38;
+  --md-default-bg-color--lighter: #112344;
+  --md-default-bg-color--lightest: #163050;
+  --md-default-fg-color:        #ddeeff;
+  --md-default-fg-color--light: #aac4dd;
+  --md-default-fg-color--lighter: #7799bb;
+  --md-default-fg-color--lightest: #4466aa;
+  --md-code-bg-color:           #0d1e38;
+  --md-code-fg-color:           #c8f07a;
+  --md-footer-bg-color:         #060e1a;
+  --md-footer-bg-color--dark:   #040a12;
+}
+
+/* Header */
+.md-header {
+  background-color: #060e1a;
+  border-bottom: 1px solid #54e9c930;
+}
+
+/* Nav sidebar */
+.md-nav--primary .md-nav__title {
+  background-color: #060e1a;
+  color: #54e9c9;
+}
+
+/* Active nav item */
+.md-nav__item--active > .md-nav__link {
+  color: #54e9c9 !important;
+  font-weight: 600;
+}
+
+/* Links */
+.md-content a {
+  color: #54e9c9;
+}
+.md-content a:hover {
+  color: #c8f07a;
+}
+
+/* ── Logo: larger and properly sized ──────────────────────────────────────── */
+.md-header__button.md-logo {
+  padding: 4px 8px;
+}
+.md-header__button.md-logo img {
+  height: 44px;
+  width: auto;
+}
+
+/* ── ASCII diagram blocks: monospace, readable, subtle border ─────────────── */
+.md-content pre code,
+.md-typeset pre code {
+  font-family: "JetBrains Mono", "Fira Code", "Cascadia Code",
+               ui-monospace, "Courier New", monospace;
+  font-size: 0.82em;
+  line-height: 1.55;
+}
+
+/* Unlanguaged code blocks (ASCII art diagrams) get a teal left border */
+.md-typeset pre:not([class*="language"]) {
+  border-left: 3px solid #54e9c940;
+  background-color: #0d1e38;
+}
+
+/* ── Math: ensure arithmatex blocks render inline-block so MathJax sees them */
+.arithmatex {
+  overflow-x: auto;
+}
+
+/* ── Tables ─────────────────────────────────────────────────────────────────── */
+.md-typeset table:not([class]) {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.85em;
+}
+.md-typeset table:not([class]) th {
+  background-color: #0d1e38;
+  color: #54e9c9;
+  border-bottom: 2px solid #54e9c940;
+  padding: 8px 12px;
+  text-align: left;
+}
+.md-typeset table:not([class]) td {
+  border-bottom: 1px solid #163050;
+  padding: 7px 12px;
+}
+.md-typeset table:not([class]) tr:nth-child(even) td {
+  background-color: #0d1e38;
+}
+.md-typeset table:not([class]) tr:hover td {
+  background-color: #112344;
+}
+
+/* ── Admonitions ─────────────────────────────────────────────────────────── */
+.md-typeset .admonition,
+.md-typeset details {
+  border-color: #54e9c940;
+}
