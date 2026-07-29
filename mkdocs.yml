@@ -1,0 +1,55 @@
+site_name: HyTwin
+site_description: AI-Controlled Digital Twin for a Multi-Node H₂ Energy Network
+site_url: https://daimoners.github.io/HyTwin/
+repo_url: https://github.com/daimoners/HyTwin
+repo_name: daimoners/HyTwin
+
+docs_dir: docs
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: light green
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: light green
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - tables
+  - fenced_code
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+
+nav:
+  - Overview: index.md
+  - Architecture: 01_architecture.md
+  - Physical Models: 02_physical_models.md
+  - Digital Twin: 03_digital_twin.md
+  - Virtual Sensors: 04_virtual_sensors.md
+  - Network Layer: 05_network_layer.md
+  - Reinforcement Learning: 06_reinforcement_learning.md
+  - Dashboard: 07_dashboard.md
+  - Configuration Reference: 08_configuration_reference.md
+  - Usage Guide: 09_usage_guide.md

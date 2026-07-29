@@ -2,6 +2,8 @@
 
 # HyTwin — AI-Controlled Digital Twin for a Multi-Node H2 Energy Network
 
+**📖 Full documentation: [daimoners.github.io/HyTwin](https://daimoners.github.io/HyTwin/)**
+
 HyTwin is a modular, scalable digital-twin framework for a
 **geographically distributed hydrogen (H₂) energy network** — physics-based
 component models, virtual sensors with realistic measurement artifacts, an
@@ -295,7 +297,10 @@ python demos/demo_advanced.py --mode compare --steps 144
 
 ## Documentation
 
-Full technical documentation lives in [`docs/`](docs/index.md):
+Full technical documentation is published at
+**[daimoners.github.io/HyTwin](https://daimoners.github.io/HyTwin/)** and
+automatically rebuilt on every push to `main`. The source lives in
+[`docs/`](docs/):
 
 1. [`01_architecture.md`](docs/01_architecture.md) — system architecture
 2. [`02_physical_models.md`](docs/02_physical_models.md) — physics & equations
