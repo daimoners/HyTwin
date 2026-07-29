@@ -1,0 +1,1620 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="AI-Controlled Digital Twin for a Multi-Node H₂ Energy Network">
+      
+      
+      
+        <link rel="canonical" href="https://daimoners.github.io/HyTwin/05_network_layer/">
+      
+      
+        <link rel="prev" href="../04_virtual_sensors/">
+      
+      
+        <link rel="next" href="../06_reinforcement_learning/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Network Layer - HyTwin</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#network-layer-multi-site-h2-network-hytwin" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="HyTwin" class="md-header__button md-logo" aria-label="HyTwin" data-md-component="logo">
+      
+  <img src="../logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            HyTwin
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Network Layer
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/daimoners/HyTwin" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    daimoners/HyTwin
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../01_architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architecture
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../02_physical_models/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Physical Models
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../03_digital_twin/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Digital Twin
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../04_virtual_sensors/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Virtual Sensors
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Network Layer
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../06_reinforcement_learning/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Reinforcement Learning
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../07_dashboard/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Dashboard
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../08_configuration_reference/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Configuration Reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../09_usage_guide/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Usage Guide
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="HyTwin" class="md-nav__button md-logo" aria-label="HyTwin" data-md-component="logo">
+      
+  <img src="../logo.png" alt="logo">
+
+    </a>
+    HyTwin
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/daimoners/HyTwin" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    daimoners/HyTwin
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02_physical_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Physical Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03_digital_twin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Digital Twin
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04_virtual_sensors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Virtual Sensors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Network Layer
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Network Layer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#guiding-design-principle-reuse-not-rewrite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guiding design principle: reuse, not rewrite
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-topology-sitespec-linkspec-networktopology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Topology — SiteSpec, LinkSpec, NetworkTopology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-configuration-schema-yaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Configuration schema (YAML)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-explicit-dispatch-the-core-of-the-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Explicit dispatch — the core of the layer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Explicit dispatch — the core of the layer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#networktwinstep-sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NetworkTwin.step() sequence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dispatch-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dispatch level
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-network-state-nodestate-linkflow-networkstate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Network state — NodeState, LinkFlow, NetworkState
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-control-traditional-and-ai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Control — traditional and AI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Control — traditional and AI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-networkclassicalcontroller" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 NetworkClassicalController
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-networkrlcontroller-networkrlenv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 NetworkRLController / NetworkRLEnv
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-rl-reward-networkrewardconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. RL reward — NetworkRewardConfig
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. RL reward — NetworkRewardConfig">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-the-h2-storage-value-term-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the H₂ storage-value term exists
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unmet-demand-penalty-linear-quadratic-event" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unmet-demand penalty: linear + quadratic + event
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#there-is-no-fixed-optimal-reward-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        There is no fixed "optimal" reward value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-reproducible-comparison-hytwinnetworkcompare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Reproducible comparison — hytwin.network.compare
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-dashboard-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Dashboard integration
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06_reinforcement_learning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reinforcement Learning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07_dashboard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dashboard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08_configuration_reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09_usage_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#guiding-design-principle-reuse-not-rewrite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guiding design principle: reuse, not rewrite
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-topology-sitespec-linkspec-networktopology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Topology — SiteSpec, LinkSpec, NetworkTopology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-configuration-schema-yaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Configuration schema (YAML)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-explicit-dispatch-the-core-of-the-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Explicit dispatch — the core of the layer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Explicit dispatch — the core of the layer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#networktwinstep-sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NetworkTwin.step() sequence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dispatch-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dispatch level
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-network-state-nodestate-linkflow-networkstate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Network state — NodeState, LinkFlow, NetworkState
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-control-traditional-and-ai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Control — traditional and AI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Control — traditional and AI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-networkclassicalcontroller" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 NetworkClassicalController
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-networkrlcontroller-networkrlenv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 NetworkRLController / NetworkRLEnv
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-rl-reward-networkrewardconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. RL reward — NetworkRewardConfig
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. RL reward — NetworkRewardConfig">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-the-h2-storage-value-term-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the H₂ storage-value term exists
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unmet-demand-penalty-linear-quadratic-event" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unmet-demand penalty: linear + quadratic + event
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#there-is-no-fixed-optimal-reward-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        There is no fixed "optimal" reward value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-reproducible-comparison-hytwinnetworkcompare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Reproducible comparison — hytwin.network.compare
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-dashboard-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Dashboard integration
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="network-layer-multi-site-h2-network-hytwin">Network Layer — Multi-Site H2 Network — HyTwin<a class="headerlink" href="#network-layer-multi-site-h2-network-hytwin" title="Permanent link">&para;</a></h1>
+<h2 id="1-overview">1. Overview<a class="headerlink" href="#1-overview" title="Permanent link">&para;</a></h2>
+<p>The network layer is what promotes HyTwin from a <strong>single-plant digital
+twin</strong> to a <strong>digital twin of a geographically distributed H₂ network</strong>: a
+graph of sites, each with its own local weather, equipment, and market
+price, connected by explicit electric lines and H₂ pipelines, with a
+network-wide dispatch balance and network-aware control (both rule-based and
+RL). This is now the primary way to use HyTwin — the flagship scenario is
+the 7-node Italian network in <code>config/italy_network_large.yaml</code>.</p>
+<h3 id="guiding-design-principle-reuse-not-rewrite">Guiding design principle: reuse, not rewrite<a class="headerlink" href="#guiding-design-principle-reuse-not-rewrite" title="Permanent link">&para;</a></h3>
+<p><code>GridTwin</code> was already, in effect, the twin of a single site. The network
+layer does not replace it: it promotes it to a <strong>site twin</strong> and adds a
+network orchestrator on top. No existing physical model was modified to
+support this.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌───────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│  NetworkTwin           (multi-site orchestrator)            │
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│   • topology: sites + links (electric lines / H2 pipelines) │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   • inter-site dispatch + explicit power/H2 flow             │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   • NetworkState: per-node + system-level                    │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>├───────────────────────────────────────────────────────────┤
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│  GridTwin  (= &quot;site twin&quot;, one per node)                     │
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│   • local weather, local components, local balance           │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>├───────────────────────────────────────────────────────────┤
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│  TwinNode · Physical models · Sensors   (unchanged)           │
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>└───────────────────────────────────────────────────────────┘
+</code></pre></div>
+<hr />
+<h2 id="2-topology-sitespec-linkspec-networktopology">2. Topology — <code>SiteSpec</code>, <code>LinkSpec</code>, <code>NetworkTopology</code><a class="headerlink" href="#2-topology-sitespec-linkspec-networktopology" title="Permanent link">&para;</a></h2>
+<p>Defined in <code>hytwin/network/topology.py</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">SiteSpec</span><span class="p">:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">location</span><span class="p">:</span> <span class="n">Location</span>            <span class="c1"># name, lat, lon, alt_m</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">grid_config</span><span class="p">:</span> <span class="nb">dict</span>             <span class="c1"># identical schema to the single-site `grid:` block</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">weather_params</span><span class="p">:</span> <span class="nb">dict</span>          <span class="c1"># WeatherModel kwargs for this site&#39;s climate</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">energy_cost</span><span class="p">:</span> <span class="nb">dict</span>             <span class="c1"># local market-zone price model config</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">sensor_config</span><span class="p">:</span> <span class="nb">list</span>           <span class="c1"># optional per-site virtual sensors</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">class</span><span class="w"> </span><span class="nc">LinkSpec</span><span class="p">:</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    <span class="n">link_type</span><span class="p">:</span> <span class="n">LinkType</span>           <span class="c1"># ELECTRIC_LINE | H2_PIPELINE</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    <span class="n">from_site</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    <span class="n">to_site</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    <span class="n">length_km</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>    <span class="c1"># auto-computed from site coordinates if omitted</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="k">class</span><span class="w"> </span><span class="nc">NetworkTopology</span><span class="p">:</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    <span class="n">sites</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SiteSpec</span><span class="p">]</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    <span class="n">links</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LinkSpec</span><span class="p">]</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    <span class="nd">@classmethod</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cfg</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;NetworkTopology&quot;</span><span class="p">:</span> <span class="o">...</span>
+</code></pre></div>
+<p><code>SiteSpec.from_config</code> merges the site's <code>location</code> (lat/lon/alt) into its
+<code>weather_params</code> automatically, so <code>WeatherModel</code> always sees the right
+geodata even if the <code>weather:</code> block omits it. When a link's <code>params</code> omits
+<code>length_km</code>, <code>NetworkTopology</code> fills it in via the <strong>great-circle distance</strong>
+between the two sites' coordinates.</p>
+<p><code>Scenario.from_yaml</code> is backward-compatible: a file with a <code>network:</code> block
+builds the multi-site layer; an existing file with only a top-level <code>grid:</code>
+block is wrapped as a single-site, zero-link <code>NetworkTopology</code>.</p>
+<hr />
+<h2 id="3-configuration-schema-yaml">3. Configuration schema (YAML)<a class="headerlink" href="#3-configuration-schema-yaml" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">network</span><span class="p">:</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">sites</span><span class="p">:</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trapani</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">      </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Trapani&quot;</span><span class="p p-Indicator">,</span><span class="nt"> lat</span><span class="p">:</span><span class="w"> </span><span class="nv">37.98</span><span class="p p-Indicator">,</span><span class="nt"> lon</span><span class="p">:</span><span class="w"> </span><span class="nv">12.51</span><span class="p p-Indicator">,</span><span class="nt"> alt_m</span><span class="p">:</span><span class="w"> </span><span class="nv">20</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">      </span><span class="nt">weather</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> weibull_k</span><span class="p">:</span><span class="w"> </span><span class="nv">2.2</span><span class="p p-Indicator">,</span><span class="nt"> weibull_c</span><span class="p">:</span><span class="w"> </span><span class="nv">7.2</span><span class="p p-Indicator">,</span><span class="nt"> autocorr_wind</span><span class="p">:</span><span class="w"> </span><span class="nv">0.91</span><span class="p p-Indicator">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nt">                 cloud_cover_mean</span><span class="p">:</span><span class="w"> </span><span class="nv">0.20</span><span class="p p-Indicator">,</span><span class="nt"> temp_mean_c</span><span class="p">:</span><span class="w"> </span><span class="nv">19.5</span><span class="p p-Indicator">,</span><span class="nt"> temp_amplitude_c</span><span class="p">:</span><span class="w"> </span><span class="nv">11</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">      </span><span class="nt">energy_cost</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> f1_price</span><span class="p">:</span><span class="w"> </span><span class="nv">0.23</span><span class="p p-Indicator">,</span><span class="nt"> f2_price</span><span class="p">:</span><span class="w"> </span><span class="nv">0.15</span><span class="p p-Indicator">,</span><span class="nt"> f3_price</span><span class="p">:</span><span class="w"> </span><span class="nv">0.08</span><span class="p p-Indicator">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="nt">                     price_volatility</span><span class="p">:</span><span class="w"> </span><span class="nv">0.10</span><span class="p p-Indicator">,</span><span class="nt"> seasonal_amplitude</span><span class="p">:</span><span class="w"> </span><span class="nv">0.20</span><span class="p p-Indicator">,</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="nt">                     spike_prob_per_day</span><span class="p">:</span><span class="w"> </span><span class="nv">0.05</span><span class="p p-Indicator">,</span><span class="nt"> spike_multiplier</span><span class="p">:</span><span class="w"> </span><span class="nv">3.0</span><span class="p p-Indicator">,</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="nt">                     spike_duration_steps</span><span class="p">:</span><span class="w"> </span><span class="nv">4</span><span class="p p-Indicator">,</span><span class="nt"> sell_ratio</span><span class="p">:</span><span class="w"> </span><span class="nv">0.30</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">      </span><span class="nt">grid</span><span class="p">:</span><span class="w">                          </span><span class="c1"># identical schema to the single-site `grid:` block</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">        </span><span class="nt">wind_turbines</span><span class="p">:</span><span class="w">   </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> id</span><span class="p">:</span><span class="w"> </span><span class="nv">trapani_wt1</span><span class="p p-Indicator">,</span><span class="nt"> params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> rated_power_kw</span><span class="p">:</span><span class="w"> </span><span class="nv">500</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">...</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">        </span><span class="nt">pv_arrays</span><span class="p">:</span><span class="w">       </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">...</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">        </span><span class="nt">electrolyzers</span><span class="p">:</span><span class="w">   </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">...</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">        </span><span class="nt">fuel_cells</span><span class="p">:</span><span class="w">      </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">...</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">        </span><span class="nt">hydrogen_tanks</span><span class="p">:</span><span class="w">  </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">...</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">        </span><span class="nt">loads</span><span class="p">:</span><span class="w">           </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">...</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">grid_connections:[ { id</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trapani_grid, params</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> max_import_kw</span><span class="p">:</span><span class="w"> </span><span class="nv">400</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">...</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="err">}</span><span class="w"> </span><span class="err">]</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">napoli</span>
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">      </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Napoli&quot;</span><span class="p p-Indicator">,</span><span class="nt"> lat</span><span class="p">:</span><span class="w"> </span><span class="nv">40.85</span><span class="p p-Indicator">,</span><span class="nt"> lon</span><span class="p">:</span><span class="w"> </span><span class="nv">14.27</span><span class="p p-Indicator">,</span><span class="nt"> alt_m</span><span class="p">:</span><span class="w"> </span><span class="nv">17</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">      </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">  </span><span class="nt">links</span><span class="p">:</span>
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trapani_napoli_h2</span>
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">h2_pipeline</span>
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">      </span><span class="nt">from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trapani</span>
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">      </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">napoli</span>
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> diameter_m</span><span class="p">:</span><span class="w"> </span><span class="nv">0.4</span><span class="p p-Indicator">,</span><span class="nt"> max_flow_kg_h</span><span class="p">:</span><span class="w"> </span><span class="nv">300</span><span class="p p-Indicator">,</span>
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="nt">                compressor_spec_kwh_per_kg</span><span class="p">:</span><span class="w"> </span><span class="nv">2.2</span><span class="p p-Indicator">,</span><span class="nt"> line_pack_capacity_kg</span><span class="p">:</span><span class="w"> </span><span class="nv">1000</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trapani_napoli_elec</span>
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">electric_line</span>
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a><span class="w">      </span><span class="nt">from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trapani</span>
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a><span class="w">      </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">napoli</span>
+<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a><span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> max_power_mw</span><span class="p">:</span><span class="w"> </span><span class="nv">40</span><span class="p p-Indicator">,</span><span class="nt"> loss_per_1000km</span><span class="p">:</span><span class="w"> </span><span class="nv">0.06</span><span class="p p-Indicator">,</span><span class="nt"> bidirectional</span><span class="p">:</span><span class="w"> </span><span class="nv">true</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</code></pre></div>
+<p>Full field reference and more real examples: <code>08_configuration_reference.md</code>.</p>
+<hr />
+<h2 id="4-explicit-dispatch-the-core-of-the-layer">4. Explicit dispatch — the core of the layer<a class="headerlink" href="#4-explicit-dispatch-the-core-of-the-layer" title="Permanent link">&para;</a></h2>
+<p>The single-site <code>GridTwin</code> closes its balance with an <strong>implicit residual</strong>
+(<code>grid_exchange = load + el − supply</code>). With multiple sites and real
+transmission constraints this doesn't scale: energy must flow <strong>explicitly</strong>
+across links.</p>
+<h3 id="networktwinstep-sequence"><code>NetworkTwin.step()</code> sequence<a class="headerlink" href="#networktwinstep-sequence" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>1. WeatherField.step(ts)                        → weather per site
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>2. for each site:  GridTwin.step(dt, weather[site], actions[site])
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>      → local production/consumption, local H2 SOC, local surplus/deficit
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>3. dispatch_electric_lines(...) / dispatch_h2_pipelines(...)  (hytwin/network/dispatch.py)
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>      • each site&#39;s net_balance = generation − demand
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>      • surplus/deficit routed across links, respecting capacity,
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>        resistive/compression losses, and availability
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>      • unresolved residual → that site&#39;s own GridConnectionModel
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>        (import/export), at its own local energy cost and carbon factor
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>4. aggregate NetworkState (per-node NodeState + per-link LinkFlow + system KPIs)
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>5. publish on EventBus, record on TimeSeriesRecorder
+</code></pre></div>
+<h3 id="dispatch-level">Dispatch level<a class="headerlink" href="#dispatch-level" title="Permanent link">&para;</a></h3>
+<p>The current implementation is <strong>L1: greedy merit-order</strong> dispatch
+(<code>hytwin/network/dispatch.py</code>, functions <code>dispatch_h2_pipelines</code> and
+<code>dispatch_electric_lines</code>): deficits are covered first from neighbouring
+sites with surplus via the cheapest available link, then from each site's
+own national-grid connection. This is deterministic, fast, and fully
+testable — a fuller LP/QP-based optimal dispatch (minimising cost + losses
+under capacity/nodal-balance constraints) is future work, and would itself
+become a reference "optimal controller" to benchmark the RL agent against.</p>
+<hr />
+<h2 id="5-network-state-nodestate-linkflow-networkstate">5. Network state — <code>NodeState</code>, <code>LinkFlow</code>, <code>NetworkState</code><a class="headerlink" href="#5-network-state-nodestate-linkflow-networkstate" title="Permanent link">&para;</a></h2>
+<p>Defined in <code>hytwin/network/network_state.py</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">NodeState</span><span class="p">:</span>                      <span class="c1"># per-site state after dispatch</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">site_id</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">timestamp</span><span class="p">:</span> <span class="n">datetime</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">renewable_kw</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">fuel_cell_kw</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">load_kw</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="n">electrolyzer_kw</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="n">compressor_load_kw</span><span class="p">:</span> <span class="nb">float</span>         <span class="c1"># H2-pipeline compression at this site</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="n">generation_kw</span><span class="p">:</span> <span class="nb">float</span>              <span class="c1"># renewable + fuel cell</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="n">demand_kw</span><span class="p">:</span> <span class="nb">float</span>                  <span class="c1"># load + electrolyzer + compressor</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="n">link_import_kw</span><span class="p">:</span> <span class="nb">float</span>             <span class="c1"># power delivered in from neighbours</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="n">link_export_kw</span><span class="p">:</span> <span class="nb">float</span>             <span class="c1"># power injected out to neighbours</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="n">grid_import_kw</span><span class="p">:</span> <span class="nb">float</span>             <span class="c1"># national-grid slack</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    <span class="n">grid_export_kw</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    <span class="c1"># ... plus H2 SOC/storage and cost/CO2 fields for the site</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="k">class</span><span class="w"> </span><span class="nc">LinkFlow</span><span class="p">:</span>                       <span class="c1"># per-link state this step</span>
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    <span class="n">link_id</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    <span class="n">link_type</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    <span class="n">from_site</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>    <span class="n">to_site</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>    <span class="n">flow</span><span class="p">:</span> <span class="nb">float</span>                       <span class="c1"># source-side (kW electric / kg-h H2)</span>
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>    <span class="n">delivered</span><span class="p">:</span> <span class="nb">float</span>                  <span class="c1"># destination-side after loss/delay</span>
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>    <span class="n">loss</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>    <span class="n">utilization</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>    <span class="n">available</span><span class="p">:</span> <span class="nb">bool</span>
+<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>
+<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="k">class</span><span class="w"> </span><span class="nc">NetworkState</span><span class="p">:</span>                   <span class="c1"># aggregated network snapshot</span>
+<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    <span class="n">timestamp</span><span class="p">:</span> <span class="n">datetime</span>
+<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>    <span class="n">nodes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NodeState</span><span class="p">]</span>
+<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>    <span class="n">links</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LinkFlow</span><span class="p">]</span>
+<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>    <span class="n">total_load_kw</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>    <span class="n">total_renewable_kw</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>    <span class="n">total_generation_kw</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>    <span class="n">total_grid_import_kw</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>    <span class="n">total_grid_export_kw</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>    <span class="n">total_curtailed_kw</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>    <span class="n">unmet_demand_kw</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a>    <span class="n">total_cost_eur_step</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a>    <span class="n">cumulative_cost_eur</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>    <span class="n">total_co2_kg_step</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a>    <span class="n">inter_node_power_kw</span><span class="p">:</span> <span class="nb">float</span>        <span class="c1"># sum of electric-link deliveries</span>
+<a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a>    <span class="n">inter_node_h2_kg_h</span><span class="p">:</span> <span class="nb">float</span>         <span class="c1"># sum of pipeline deliveries</span>
+<a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a>    <span class="c1"># ... plus system-level self-sufficiency, renewable fraction, reliability</span>
+</code></pre></div>
+<p><code>GridState</code> (per-site, see <code>03_digital_twin.md</code>) remains the underlying
+per-node building block — the dashboard's per-node drill-down and the
+recorder continue to work per site without modification; <code>NetworkState</code>
+wraps and aggregates it.</p>
+<hr />
+<h2 id="6-control-traditional-and-ai">6. Control — traditional and AI<a class="headerlink" href="#6-control-traditional-and-ai" title="Permanent link">&para;</a></h2>
+<h3 id="61-networkclassicalcontroller">6.1 <code>NetworkClassicalController</code><a class="headerlink" href="#61-networkclassicalcontroller" title="Permanent link">&para;</a></h3>
+<p>A network-aware overlay on top of the existing single-site
+<code>ClassicalController</code> — one controller instance per site (built via
+<code>NetworkClassicalController.from_network(network_twin)</code>), sharing each
+site's own price model, plus two network-level dispatch policies:</p>
+<ul>
+<li><strong>Electric-transport-first</strong>: renewable surplus that could serve a
+  neighbouring site's deficit over an electric line is preferentially
+  reserved for that transport rather than pushed into local H₂ production,
+  since electric transmission is far more efficient than an
+  electrolysis → pipeline → fuel-cell round trip.</li>
+<li><strong>Green-H₂-first</strong>: fuel cells draw down stored H₂ ahead of importing from
+  the national grid, so the network favours consuming its own green
+  hydrogen reserve over paying for grid electricity when H₂ SOC allows it.</li>
+</ul>
+<p>On the 7-node pilot network over a 7-day comparison against a naive
+(uncontrolled) baseline, the rule-based network controller achieved
+<strong>−12.4% cost, −10.4% CO₂</strong>, while building H₂ reserve rather than draining
+it.</p>
+<h3 id="62-networkrlcontroller-networkrlenv">6.2 <code>NetworkRLController</code> / <code>NetworkRLEnv</code><a class="headerlink" href="#62-networkrlcontroller-networkrlenv" title="Permanent link">&para;</a></h3>
+<p>The flat, fixed-dimension observation/action vector of the single-site
+<code>H2GridEnv</code> does not scale to N sites. HyTwin uses a <strong>per-node factored</strong>
+design (a single agent, structured observation/action space):</p>
+<ul>
+<li><strong>Observation</strong>: concatenation of fixed-size per-site blocks (local
+  generation, load, H₂ SOC, price, sensor-fused state, …) plus per-link
+  features (utilization, availability).</li>
+<li><strong>Action</strong>: per-site blocks (electrolyzer/fuel-cell setpoints, demand
+  response, local grid posture) plus link-level exchange decisions.</li>
+</ul>
+<p>This keeps the interface regular (<code>observe()</code> / <code>decode_action()</code> as a list
+of per-site blocks) while remaining a single PPO policy trainable directly
+with Stable-Baselines3 — no custom multi-agent (MARL) or graph-network (GNN)
+infrastructure is required for this release, though the factored design was
+chosen specifically so it can migrate to MARL/GNN later without changing the
+environment's external contract.</p>
+<p>On the 7-node pilot network, a PPO agent trained for 40k steps outperformed
+the rule-based network controller on cost (232 € vs 6643 € over the
+comparison horizon), cut CO₂ by ~52%, reached ~0.91 self-sufficiency, <strong>and</strong>
+still built H₂ reserve instead of draining it — see §7 on the reward design
+that makes this possible.</p>
+<p><code>NetworkRLController.factory(model_path)</code> wraps a trained SB3 model into the
+same controller interface used by <code>compare_controllers</code> and the dashboard's
+<code>rl</code> controller mode.</p>
+<hr />
+<h2 id="7-rl-reward-networkrewardconfig">7. RL reward — <code>NetworkRewardConfig</code><a class="headerlink" href="#7-rl-reward-networkrewardconfig" title="Permanent link">&para;</a></h2>
+<p>Defined in <code>hytwin/rl/network_environment.py</code>. A multi-term weighted reward,
+computed once per step from the resulting <code>NetworkState</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">NetworkRewardConfig</span><span class="p">:</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">w_cost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>                 <span class="c1"># €/step penalty (scaled by ref_cost_eur_step)</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">w_co2</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span>                  <span class="c1"># kg/step penalty (scaled by ref_co2_kg_step)</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">w_unmet_linear</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">9.0</span>         <span class="c1"># strong linear penalty on unmet demand</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">w_unmet_quadratic</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">25.0</span>     <span class="c1"># quadratic term — deters even small shortfalls</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">w_unmet_event</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>          <span class="c1"># flat penalty whenever unmet &gt; unmet_tolerance</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">unmet_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.002</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">w_self_sufficiency</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.4</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="n">w_renewable</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="n">w_soc_health</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span>           <span class="c1"># reward SOC staying near soc_target</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="n">w_curtailment</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span>          <span class="c1"># penalise wasted renewable</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    <span class="n">w_storage_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>        <span class="c1"># credit/debit H2 tank-mass changes</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    <span class="n">h2_value_eur_per_kg</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">4.0</span>    <span class="c1"># replacement value of stored H2</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    <span class="n">soc_target</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>    <span class="n">ref_cost_eur_step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    <span class="n">ref_co2_kg_step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span>
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    <span class="n">ref_curtail_kw</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">500.0</span>
+</code></pre></div>
+<h3 id="why-the-h2-storage-value-term-exists">Why the H₂ storage-value term exists<a class="headerlink" href="#why-the-h2-storage-value-term-exists" title="Permanent link">&para;</a></h3>
+<p>Without <code>w_storage_value</code>, an agent can make its cost term look artificially
+low by draining the H₂ tanks to zero — stored H₂ acts as "free" fuel from
+the reward's point of view. <code>w_storage_value</code> credits the reward when tank
+mass increases and debits it when tank mass decreases, valued at
+<code>h2_value_eur_per_kg</code> (≈4 €/kg — the same units as the grid-cost term). This
+internalises the reserve's replacement value directly into what the agent
+optimises, mirroring the <code>storage_adjusted_cost</code> KPI used for reporting, and
+is what prevents the reward-hacking behaviour described in §6.2.</p>
+<h3 id="unmet-demand-penalty-linear-quadratic-event">Unmet-demand penalty: linear + quadratic + event<a class="headerlink" href="#unmet-demand-penalty-linear-quadratic-event" title="Permanent link">&para;</a></h3>
+<p>A pure quadratic penalty barely discourages <em>tiny</em> shortfalls (its
+derivative near zero is near zero), so early agents learned to risk small,
+frequent unmet-demand events. The reward therefore combines a strong
+<strong>linear</strong> term, a <strong>quadratic</strong> term, and a flat <strong>event</strong> penalty
+triggered whenever unmet demand exceeds <code>unmet_tolerance</code> — together these
+make reliability effectively non-negotiable for a well-trained policy
+(self-sufficiency and reliability KPIs approach 1.0).</p>
+<h3 id="there-is-no-fixed-optimal-reward-value">There is no fixed "optimal" reward value<a class="headerlink" href="#there-is-no-fixed-optimal-reward-value" title="Permanent link">&para;</a></h3>
+<p>The reward is an <strong>unbounded weighted sum</strong> whose achievable range depends
+on that episode's weather and price draw (a windy, sunny week and a calm,
+overcast week are not comparable). There is therefore no fixed benchmark
+reward to target. The correct way to evaluate a trained policy is:</p>
+<ol>
+<li><strong>Relative performance</strong> vs. the <code>none</code> (naive) and <code>classical</code>
+   (rule-based) controllers, computed under the identical reward formula on
+   the <strong>same seed</strong> (same weather/price draw) — this is exactly what
+   <code>compare_controllers</code> does.</li>
+<li>The <strong>learning curve's smoothed trend</strong> during training (not its raw
+   absolute value) — see <code>06_reinforcement_learning.md</code> and the dashboard's
+   AI Training screen.</li>
+</ol>
+<hr />
+<h2 id="8-reproducible-comparison-hytwinnetworkcompare">8. Reproducible comparison — <code>hytwin.network.compare</code><a class="headerlink" href="#8-reproducible-comparison-hytwinnetworkcompare" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">hytwin.network.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">compare_controllers</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">out</span> <span class="o">=</span> <span class="n">compare_controllers</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">1008</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">strategies</span><span class="o">=</span><span class="p">{</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="s2">&quot;none&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;classical&quot;</span><span class="p">:</span> <span class="s2">&quot;classical&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="s2">&quot;rl&quot;</span><span class="p">:</span> <span class="n">NetworkRLController</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="s2">&quot;output/rl_models/net_ppo_large&quot;</span><span class="p">),</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">})</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">kpis</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">kpis</span><span class="p">)</span>
+</code></pre></div>
+<p><code>compare_controllers</code> runs each strategy under <strong>identical</strong> conditions
+(same seed → same weather/price draw across all sites) and returns a
+<code>{strategy_name: kpis_dict}</code> mapping, so results are directly comparable.
+This is the batch-comparison engine behind both the CLI comparison snippet
+and the dashboard's Scenario Comparison screen (<code>07_dashboard.md</code>).</p>
+<hr />
+<h2 id="9-dashboard-integration">9. Dashboard integration<a class="headerlink" href="#9-dashboard-integration" title="Permanent link">&para;</a></h2>
+<p>The network layer surfaces in full in the <strong>Network Control Room</strong>
+dashboard (<code>dashboard/network_app.py</code>, <code>07_dashboard.md</code>): the animated
+Italy map plots the real topology's sites/links from live lat/lon data, the
+Control &amp; AI screen switches the live controller between <code>none</code> /
+<code>classical</code> / <code>rl</code>, Scenario Comparison runs <code>compare_controllers</code>-style
+batch and live lockstep comparisons from the UI, and the Configuration
+screen edits the <code>network:</code> YAML directly — adding a node is a matter of
+duplicating a <code>- id: ...</code> site block and giving it a new id, with no code
+changes required.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

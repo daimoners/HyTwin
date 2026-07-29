@@ -1,0 +1,1774 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="AI-Controlled Digital Twin for a Multi-Node H₂ Energy Network">
+      
+      
+      
+        <link rel="canonical" href="https://daimoners.github.io/HyTwin/03_digital_twin/">
+      
+      
+        <link rel="prev" href="../02_physical_models/">
+      
+      
+        <link rel="next" href="../04_virtual_sensors/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Digital Twin - HyTwin</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#digital-twin-architecture-hytwin-20" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="HyTwin" class="md-header__button md-logo" aria-label="HyTwin" data-md-component="logo">
+      
+  <img src="../logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            HyTwin
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Digital Twin
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/daimoners/HyTwin" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    daimoners/HyTwin
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../01_architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architecture
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../02_physical_models/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Physical Models
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Digital Twin
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../04_virtual_sensors/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Virtual Sensors
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../05_network_layer/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Network Layer
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../06_reinforcement_learning/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Reinforcement Learning
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../07_dashboard/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Dashboard
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../08_configuration_reference/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Configuration Reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../09_usage_guide/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Usage Guide
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="HyTwin" class="md-nav__button md-logo" aria-label="HyTwin" data-md-component="logo">
+      
+  <img src="../logo.png" alt="logo">
+
+    </a>
+    HyTwin
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/daimoners/HyTwin" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    daimoners/HyTwin
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02_physical_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Physical Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Digital Twin
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Digital Twin
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-what-is-a-digital-twin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. What is a Digital Twin
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-twinnode-single-component-twin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. TwinNode — single-component twin
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. TwinNode — single-component twin">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-internal-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Internal structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-update-cycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Update cycle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-twinnodestate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 TwinNodeState
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-observation-for-rl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Observation for RL
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-behaviour-under-sensor-faults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 Behaviour under sensor faults
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-anomaly-scoring-scale-free-relative-deviation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 Anomaly scoring — scale-free relative deviation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-gridtwin-site-level-coordination" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. GridTwin — site-level coordination
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. GridTwin — site-level coordination">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-construction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Construction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Step
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 Step">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#internal-gridtwinstep-sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Internal GridTwin.step() sequence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-gridstate-site-level-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 GridState — site-level state
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.3 GridState — site-level state">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#performance-indices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance indices
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-statemanager-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 StateManager integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-model-sensor-fusion-mathematical-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Model-sensor fusion — mathematical detail
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Model-sensor fusion — mathematical detail">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-weighted-estimator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Weighted estimator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-anomaly-score" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Anomaly score
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-limits-of-the-current-estimator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Limits of the current estimator
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-h2-flow-within-a-site" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. H₂ flow within a site
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-operating-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Operating modes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Operating modes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simulation-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simulation mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#live-digital-twin-mode-target-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live digital-twin mode (target architecture)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-history-and-time-travel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. History and time-travel
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04_virtual_sensors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Virtual Sensors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05_network_layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Network Layer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06_reinforcement_learning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reinforcement Learning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07_dashboard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dashboard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08_configuration_reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09_usage_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-what-is-a-digital-twin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. What is a Digital Twin
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-twinnode-single-component-twin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. TwinNode — single-component twin
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. TwinNode — single-component twin">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-internal-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Internal structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-update-cycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Update cycle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-twinnodestate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 TwinNodeState
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-observation-for-rl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Observation for RL
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-behaviour-under-sensor-faults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 Behaviour under sensor faults
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-anomaly-scoring-scale-free-relative-deviation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 Anomaly scoring — scale-free relative deviation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-gridtwin-site-level-coordination" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. GridTwin — site-level coordination
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. GridTwin — site-level coordination">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-construction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Construction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Step
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 Step">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#internal-gridtwinstep-sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Internal GridTwin.step() sequence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-gridstate-site-level-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 GridState — site-level state
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.3 GridState — site-level state">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#performance-indices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance indices
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-statemanager-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 StateManager integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-model-sensor-fusion-mathematical-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Model-sensor fusion — mathematical detail
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Model-sensor fusion — mathematical detail">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-weighted-estimator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Weighted estimator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-anomaly-score" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Anomaly score
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-limits-of-the-current-estimator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Limits of the current estimator
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-h2-flow-within-a-site" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. H₂ flow within a site
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-operating-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Operating modes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Operating modes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simulation-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simulation mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#live-digital-twin-mode-target-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live digital-twin mode (target architecture)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-history-and-time-travel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. History and time-travel
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="digital-twin-architecture-hytwin-20">Digital Twin Architecture — HyTwin 2.0<a class="headerlink" href="#digital-twin-architecture-hytwin-20" title="Permanent link">&para;</a></h1>
+<h2 id="1-what-is-a-digital-twin">1. What is a Digital Twin<a class="headerlink" href="#1-what-is-a-digital-twin" title="Permanent link">&para;</a></h2>
+<p>A <strong>Digital Twin</strong> is a continuously-updated virtual representation of a
+real physical asset. In HyTwin 2.0 the digital twin is structured in three
+hierarchical levels:</p>
+<ol>
+<li><strong><code>TwinNode</code></strong> — the digital twin of a single component (turbine,
+   electrolyzer, tank, …)</li>
+<li><strong><code>GridTwin</code></strong> (also referred to as a <strong>site twin</strong>) — orchestrates all
+   the <code>TwinNode</code>s of one site and produces that site's aggregated state
+   (<code>GridState</code>)</li>
+<li><strong><code>NetworkTwin</code></strong> — orchestrates multiple <code>GridTwin</code> instances (one per
+   geographic site) plus the inter-site links, producing the network-wide
+   <code>NetworkState</code> (see <code>05_network_layer.md</code>)</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>NetworkTwin                              ← multi-site orchestrator
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a> ├── GridTwin &quot;trapani&quot;
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a> │     ├── TwinNode &quot;trapani_wt1&quot; ← WindTurbineModel  + sensors
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a> │     ├── TwinNode &quot;trapani_pv1&quot; ← PhotovoltaicModel + sensors
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a> │     ├── TwinNode &quot;trapani_el1&quot; ← ElectrolyzerModel + sensors
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a> │     ├── TwinNode &quot;trapani_tk1&quot; ← HydrogenTankModel + sensors
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a> │     └── TwinNode &quot;trapani_load&quot;← EnergyLoadModel   + sensors
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a> ├── GridTwin &quot;napoli&quot;   (same structure, different equipment mix)
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a> ├── GridTwin &quot;roma&quot;
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a> └── …
+</code></pre></div>
+<p>A single-site deployment is simply a <code>NetworkTwin</code> with one site and no
+links — <code>GridTwin</code> itself is unmodified from the original single-site
+design.</p>
+<hr />
+<h2 id="2-twinnode-single-component-twin">2. TwinNode — single-component twin<a class="headerlink" href="#2-twinnode-single-component-twin" title="Permanent link">&para;</a></h2>
+<h3 id="21-internal-structure">2.1 Internal structure<a class="headerlink" href="#21-internal-structure" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>TwinNode
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a> ├── model: BaseModel               ← physical model
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a> ├── _keys: List[str]               ← state keys of interest
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a> ├── _anomaly_threshold: float      ← relative deviation threshold
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a> ├── _current_state: TwinNodeState
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a> └── _history: List[TwinNodeState]  ← up to 1440 steps
+</code></pre></div>
+<h3 id="22-update-cycle">2.2 Update cycle<a class="headerlink" href="#22-update-cycle" title="Permanent link">&para;</a></h3>
+<p>Each time step:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>call: node.update(model_state, sensor_readings)
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>         │
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>         ├─ model_vals = model_state.values (dict str→float)
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>         │
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>         ├─ [for each key k in model_vals]
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>         │     find a matching sensor reading
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>         │       (matching: sensor_type ⊂ key name)
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>         │
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>         │   if reading is OK:
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>         │     fused[k] = w_sensor × sensor_val + (1-w_sensor) × model_val
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>         │     w_sensor = reading.quality  ∈ [0,1]
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>         │     rel_err  = |sensor_val - model_val| / (|model_val| + 1e-6)
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>         │
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>         │   if reading is FAULT_* or missing:
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>         │     fused[k] = model_val   (the model is the fallback ground truth)
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>         │     rel_err  = 1.0         (worst-case, by definition)
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>         │
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>         ├─ anomaly_score = clip(max(rel_err) / anomaly_threshold, 0, 1)
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>         ├─ health_score = 1 - anomaly_score
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>         │
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>         └─ returns TwinNodeState (incl. worst-offender diagnostic fields)
+</code></pre></div>
+<h3 id="23-twinnodestate">2.3 TwinNodeState<a class="headerlink" href="#23-twinnodestate" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">TwinNodeState</span><span class="p">:</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">timestamp</span><span class="p">:</span> <span class="n">datetime</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">model_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>     <span class="c1"># raw model output</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">fused_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>     <span class="c1"># model+sensor fused state</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">anomaly_score</span><span class="p">:</span> <span class="nb">float</span>               <span class="c1"># 0 = normal, 1 = maximal anomaly</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">health_score</span><span class="p">:</span> <span class="nb">float</span>                <span class="c1"># 1 - anomaly_score</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">sensor_quality</span><span class="p">:</span> <span class="nb">float</span>              <span class="c1"># average quality of OK sensors</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="c1"># Diagnostic detail for the worst-offending sensor this step (None if</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="c1"># nothing flagged) — lets callers (e.g. the dashboard event log) report</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="c1"># *which* measurement is at fault and *why*, not just an aggregate score.</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    <span class="n">fault_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="n">fault_status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>        <span class="c1"># SensorStatus name, e.g. &quot;FAULT_SPIKE&quot;</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    <span class="n">fault_sensor_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    <span class="n">fault_model_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+</code></pre></div>
+<h3 id="24-observation-for-rl">2.4 Observation for RL<a class="headerlink" href="#24-observation-for-rl" title="Permanent link">&para;</a></h3>
+<p><code>observe(keys=None)</code> returns a NumPy vector of the fused values:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">obs</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;pressure_bar&quot;</span><span class="p">,</span> <span class="s2">&quot;soc&quot;</span><span class="p">])</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="c1"># → array([275.3, 0.52], dtype=float32)</span>
+</code></pre></div>
+<p>If <code>keys=None</code>, all fused values are returned in insertion order.</p>
+<h3 id="25-behaviour-under-sensor-faults">2.5 Behaviour under sensor faults<a class="headerlink" href="#25-behaviour-under-sensor-faults" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Sensor status</th>
+<th>Fusion</th>
+<th>Anomaly contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OK</code></td>
+<td>quality-weighted average</td>
+<td><code>rel_err = |sensor − model| / |model|</code></td>
+</tr>
+<tr>
+<td><code>DEGRADED</code></td>
+<td>quality-weighted average</td>
+<td>same, tracked as a fault candidate if numerically off</td>
+</tr>
+<tr>
+<td><code>FAULT_STUCK</code></td>
+<td>model value only</td>
+<td><code>rel_err = 1.0</code> (worst case)</td>
+</tr>
+<tr>
+<td><code>FAULT_OFFLINE</code></td>
+<td>model value only</td>
+<td><code>rel_err = 1.0</code></td>
+</tr>
+<tr>
+<td><code>FAULT_SPIKE</code></td>
+<td>model value only (transient)</td>
+<td><code>rel_err = 1.0</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>This is intentional: a broken sensor should not silently vanish from the
+anomaly picture — a fault is, by construction, the worst possible
+disagreement between sensor and model, so it always pushes the anomaly
+score toward its cap rather than being excluded from the calculation.</p>
+</blockquote>
+<h3 id="26-anomaly-scoring-scale-free-relative-deviation">2.6 Anomaly scoring — scale-free relative deviation<a class="headerlink" href="#26-anomaly-scoring-scale-free-relative-deviation" title="Permanent link">&para;</a></h3>
+<p>Unlike a fixed absolute-unit threshold (e.g. "10 kW off is anomalous"), the
+anomaly score is a <strong>relative deviation</strong>: the fraction of the model's
+expected value by which the sensor disagrees, clipped by
+<code>anomaly_threshold</code> (default 0.5, i.e. a 50% relative deviation saturates
+the score to 1.0):</p>
+<div class="arithmatex">\[\text{anomaly\_score} = \text{clip}\!\left(\frac{\max_k |y_k - \hat{x}_k| / (|\hat{x}_k| + \epsilon)}{\theta_{\text{anom}}},\ 0,\ 1\right)\]</div>
+<p>This makes the same threshold meaningful whether the sensor reports power in
+kW, pressure in bar, or SOC as a 0–1 fraction — a component measured in bar
+does not need a different threshold from one measured in kW just because
+its numbers are larger.</p>
+<hr />
+<h2 id="3-gridtwin-site-level-coordination">3. GridTwin — site-level coordination<a class="headerlink" href="#3-gridtwin-site-level-coordination" title="Permanent link">&para;</a></h2>
+<h3 id="31-construction">3.1 Construction<a class="headerlink" href="#31-construction" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">twin</span> <span class="o">=</span> <span class="n">GridTwin</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="n">event_bus</span><span class="p">,</span> <span class="n">state_manager</span><span class="p">)</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">twin</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>   <span class="c1"># instantiates TwinNodes from the YAML parameters</span>
+</code></pre></div>
+<p><code>build()</code> walks the configuration sections <code>wind_turbines</code>, <code>pv_arrays</code>,
+<code>electrolyzers</code>, <code>fuel_cells</code>, <code>hydrogen_tanks</code>, <code>loads</code>,
+<code>grid_connections</code>, and creates one <code>TwinNode</code> per element.</p>
+<h3 id="32-step">3.2 Step<a class="headerlink" href="#32-step" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">grid_state</span> <span class="o">=</span> <span class="n">twin</span><span class="o">.</span><span class="n">step</span><span class="p">(</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">dt</span><span class="p">,</span>                    <span class="c1"># step duration [s]</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">weather</span><span class="p">,</span>               <span class="c1"># dict from WeatherModel</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">control_actions</span><span class="p">,</span>       <span class="c1"># {node_id: {param: val}}</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">sensor_readings</span><span class="p">,</span>       <span class="c1"># List[SensorReading] (optional)</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">timestamp</span><span class="p">,</span>             <span class="c1"># datetime (optional)</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">)</span>
+</code></pre></div>
+<h4 id="internal-gridtwinstep-sequence">Internal <code>GridTwin.step()</code> sequence<a class="headerlink" href="#internal-gridtwinstep-sequence" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>1. Group sensor_readings by node_id prefix
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>2. For each node (sequential loop):
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>   a. Build context = weather + control_actions[node_id]
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>   b. Call model.step(dt, context) → ModelState
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>   c. Call node.update(model_state, readings) → TwinNodeState
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>   d. Write to StateManager: &quot;node_id.key&quot; → value
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>   e. Update aggregate KPIs (wind_kw, pv_kw, el_kw, …)
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>3. Compute GridState with all aggregated KPIs
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>4. Publish on EventBus: topic &quot;twin.grid_state&quot;
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>5. Return GridState
+</code></pre></div>
+<blockquote>
+<p><strong>Architectural note</strong>: the loop is <strong>sequential</strong> (single-pass). H₂ flow
+between electrolyzer and tank is <strong>not</strong> automatically coordinated inside
+<code>GridTwin.step()</code> — the caller (<code>SimulationEngine</code> for single-site, or the
+network dispatch step for multi-site) handles H₂ storage updates
+separately after the step.</p>
+</blockquote>
+<h3 id="33-gridstate-site-level-state">3.3 GridState — site-level state<a class="headerlink" href="#33-gridstate-site-level-state" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">GridState</span><span class="p">:</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="n">timestamp</span><span class="p">:</span> <span class="n">datetime</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">wind_power_kw</span><span class="p">:</span> <span class="nb">float</span>          <span class="c1"># sum of wind turbines</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="n">pv_power_kw</span><span class="p">:</span> <span class="nb">float</span>            <span class="c1"># sum of PV arrays</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="n">electrolyzer_power_kw</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># sum of electrolyzers</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="n">fuel_cell_power_kw</span><span class="p">:</span> <span class="nb">float</span>     <span class="c1"># sum of fuel cells</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">load_kw</span><span class="p">:</span> <span class="nb">float</span>                <span class="c1"># total load</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    <span class="n">grid_exchange_kw</span><span class="p">:</span> <span class="nb">float</span>       <span class="c1"># import(+) / export(-) from grid</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>    <span class="n">h2_production_kg_h</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>    <span class="n">h2_consumption_kg_h</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>    <span class="n">h2_storage_kg</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>    <span class="n">h2_soc</span><span class="p">:</span> <span class="nb">float</span>                 <span class="c1"># tank SOC [0-1]</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>    <span class="n">h2_pressure_bar</span><span class="p">:</span> <span class="nb">float</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>    <span class="n">renewable_fraction</span><span class="p">:</span> <span class="nb">float</span>     <span class="c1"># renewable share [0-1]</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>    <span class="n">grid_self_sufficiency</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># off-grid autonomy [0-1]</span>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>    <span class="n">system_efficiency</span><span class="p">:</span> <span class="nb">float</span>      <span class="c1"># average stack efficiency</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>    <span class="n">overall_health</span><span class="p">:</span> <span class="nb">float</span>         <span class="c1"># average node health score</span>
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>    <span class="n">anomaly_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>      <span class="c1"># nodes with anomaly_score &gt; 0.5</span>
+</code></pre></div>
+<h4 id="performance-indices">Performance indices<a class="headerlink" href="#performance-indices" title="Permanent link">&para;</a></h4>
+<p><strong>Renewable fraction</strong>:
+<span class="arithmatex">\(F_{\text{ren}} = \frac{P_{\text{wind}} + P_{\text{PV}}}{P_{\text{load}} + P_{\text{el}} + \epsilon}\)</span></p>
+<p><strong>Self-sufficiency</strong>:
+<span class="arithmatex">\(F_{\text{self}} = 1 - \frac{\max(0, P_{\text{load}} + P_{\text{el}} - P_{\text{ren}} - P_{\text{FC}})}{P_{\text{load}} + P_{\text{el}} + \epsilon}\)</span></p>
+<p><strong>Grid exchange</strong>: <span class="arithmatex">\(P_{\text{grid}} = (P_{\text{load}} + P_{\text{el}}) - (P_{\text{ren}} + P_{\text{FC}})\)</span>
+(positive = import, negative = export)</p>
+<p>In a network deployment this per-site residual is only the <em>local</em> balance
+before inter-site dispatch — the network layer (<code>05_network_layer.md</code>)
+resolves surplus/deficit across links before falling back to each site's
+own grid import/export.</p>
+<h3 id="34-statemanager-integration">3.4 StateManager integration<a class="headerlink" href="#34-statemanager-integration" title="Permanent link">&para;</a></h3>
+<p>After every model step, <code>GridTwin</code> writes each node's variables to the
+<code>StateManager</code> with the convention <code>"node_id.variable"</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>&quot;wt1.power_kw&quot;          → 487.3
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>&quot;wt1.wind_speed_hub_ms&quot; → 11.2
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>&quot;el1.h2_flow_kg_h&quot;      → 5.67
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>&quot;tk1.pressure_bar&quot;      → 312.5
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>&quot;tk1.soc&quot;               → 0.58
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>…
+</code></pre></div>
+<p><code>SensorManager</code> then reads this snapshot to feed the virtual sensors at the
+next step.</p>
+<hr />
+<h2 id="4-model-sensor-fusion-mathematical-detail">4. Model-sensor fusion — mathematical detail<a class="headerlink" href="#4-model-sensor-fusion-mathematical-detail" title="Permanent link">&para;</a></h2>
+<h3 id="41-weighted-estimator">4.1 Weighted estimator<a class="headerlink" href="#41-weighted-estimator" title="Permanent link">&para;</a></h3>
+<p>For each variable <span class="arithmatex">\(k\)</span> with model value <span class="arithmatex">\(\hat{x}_k\)</span> and sensor reading <span class="arithmatex">\(y_k\)</span>
+of quality <span class="arithmatex">\(q \in [0,1]\)</span>:</p>
+<div class="arithmatex">\[\hat{x}_k^{\text{fused}} = q \cdot y_k + (1-q) \cdot \hat{x}_k\]</div>
+<p>The weight <span class="arithmatex">\(q\)</span> is the sensor's quality score, computed in the sensor layer
+from the deviation from a rolling mean and from the fault type (see
+<code>04_virtual_sensors.md</code>).</p>
+<h3 id="42-anomaly-score">4.2 Anomaly score<a class="headerlink" href="#42-anomaly-score" title="Permanent link">&para;</a></h3>
+<p>See §2.6 above — the score is the worst-case relative deviation across a
+node's sensors, scaled by <code>anomaly_threshold</code> and clipped to [0, 1].</p>
+<h3 id="43-limits-of-the-current-estimator">4.3 Limits of the current estimator<a class="headerlink" href="#43-limits-of-the-current-estimator" title="Permanent link">&para;</a></h3>
+<p>The current estimator is a <strong>fixed-weight complementary filter</strong>. It does
+not implement a dynamic state observer (e.g. a Kalman filter). Natural
+extensions for future versions include:
+- Linear Kalman Filter for variables with additive Gaussian noise
+- Unscented Kalman Filter for the polarisation curve's non-linearity
+- Recursive sensor-quality estimation (online EM)</p>
+<hr />
+<h2 id="5-h2-flow-within-a-site">5. H₂ flow within a site<a class="headerlink" href="#5-h2-flow-within-a-site" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>ElectrolyzerModel  →  h2_kg_step
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>                          │
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>                    [H2 storage update — engine or dispatch layer]
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>                          │
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>                    HydrogenTankModel.charge(h2_kg_step)
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>                          │
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>                    HydrogenTankModel.discharge(h2_demand)
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>                          │
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>                    FuelCellModel  ←  h2_available_kg
+</code></pre></div>
+<p>For a single site, <code>SimulationEngine</code> manages H₂ flow between components
+<strong>after</strong> each complete <code>GridTwin</code> step, collecting production from the
+electrolyzer (<code>gs.h2_production_kg_h</code>) and consumption from the fuel cell
+(<code>gs.h2_consumption_kg_h</code>). For a network, the same flow happens per site
+inside <code>NetworkTwin.step()</code>, in addition to inter-site H₂ pipeline transfer.</p>
+<hr />
+<h2 id="6-operating-modes">6. Operating modes<a class="headerlink" href="#6-operating-modes" title="Permanent link">&para;</a></h2>
+<h3 id="simulation-mode">Simulation mode<a class="headerlink" href="#simulation-mode" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>SimulationEngine → WeatherModel → GridTwin → [TwinNode × N]
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>                                           ↕ StateManager
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>                                 SensorManager → virtual readings
+</code></pre></div>
+<p>The engine orchestrates everything deterministically at every step.</p>
+<h3 id="live-digital-twin-mode-target-architecture">Live digital-twin mode (target architecture)<a class="headerlink" href="#live-digital-twin-mode-target-architecture" title="Permanent link">&para;</a></h3>
+<p>In production, real sensors replace the virtual <code>SensorManager</code>. The
+physical model keeps running in parallel as a <strong>predictive model</strong>, and
+fusion is performed against real data:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Physical sensors → SensorReading → TwinNode.update(model_state, readings)
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>                                        ↑
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>                           Model.step() at every tick
+</code></pre></div>
+<p><code>GridTwin</code> is designed to support both modes without code changes — the
+only difference is the source of the <code>SensorReading</code>s.</p>
+<hr />
+<h2 id="7-history-and-time-travel">7. History and time-travel<a class="headerlink" href="#7-history-and-time-travel" title="Permanent link">&para;</a></h2>
+<p>Every <code>TwinNode</code> keeps a history of <code>TwinNodeState</code> (default 1440 entries =
+24 h at 1-min steps). The method:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">node</span><span class="o">.</span><span class="n">history</span><span class="p">(</span><span class="n">last</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>   <span class="c1"># last 60 steps</span>
+</code></pre></div>
+<p>returns the list of previous states, usable for:
+- Trend analysis
+- Short-term forecasting
+- Debugging and explainability</p>
+<p>This is what backs the Diagnostics screen's per-component health/anomaly
+history in the Network Control Room dashboard.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

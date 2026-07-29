@@ -1,0 +1,1609 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="AI-Controlled Digital Twin for a Multi-Node H₂ Energy Network">
+      
+      
+      
+        <link rel="canonical" href="https://daimoners.github.io/HyTwin/09_usage_guide/">
+      
+      
+        <link rel="prev" href="../08_configuration_reference/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Usage Guide - HyTwin</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#how-to-use-hytwin-usage-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="HyTwin" class="md-header__button md-logo" aria-label="HyTwin" data-md-component="logo">
+      
+  <img src="../logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            HyTwin
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Usage Guide
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/daimoners/HyTwin" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    daimoners/HyTwin
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../01_architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architecture
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../02_physical_models/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Physical Models
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../03_digital_twin/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Digital Twin
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../04_virtual_sensors/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Virtual Sensors
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../05_network_layer/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Network Layer
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../06_reinforcement_learning/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Reinforcement Learning
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../07_dashboard/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Dashboard
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../08_configuration_reference/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Configuration Reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Usage Guide
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="HyTwin" class="md-nav__button md-logo" aria-label="HyTwin" data-md-component="logo">
+      
+  <img src="../logo.png" alt="logo">
+
+    </a>
+    HyTwin
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/daimoners/HyTwin" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    daimoners/HyTwin
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02_physical_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Physical Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03_digital_twin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Digital Twin
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04_virtual_sensors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Virtual Sensors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05_network_layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Network Layer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06_reinforcement_learning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reinforcement Learning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07_dashboard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dashboard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08_configuration_reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage Guide
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-running-a-network-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Running a network simulation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Running a network simulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dashboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dashboard
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-training-an-ai-rl-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Training an AI (RL) agent
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Training an AI (RL) agent">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dashboard-ai-training-screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dashboard — AI Training screen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cli-recommended-for-real-training-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI — recommended for real training runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-running-a-traditional-vs-ai-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Running a Traditional-vs-AI comparison
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Running a Traditional-vs-AI comparison">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dashboard-scenario-comparison-screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dashboard — Scenario Comparison screen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cli_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-varying-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Varying conditions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Varying conditions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-time-horizon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Time horizon
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-seed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Seed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-network-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Network configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-interpreting-the-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Interpreting the results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Interpreting the results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kpis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KPIs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reward-learning-curve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reward / learning curve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#events-alarms-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Events &amp; Alarms log
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-test-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Test suite
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-running-a-network-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Running a network simulation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Running a network simulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dashboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dashboard
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-training-an-ai-rl-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Training an AI (RL) agent
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Training an AI (RL) agent">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dashboard-ai-training-screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dashboard — AI Training screen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cli-recommended-for-real-training-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI — recommended for real training runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-running-a-traditional-vs-ai-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Running a Traditional-vs-AI comparison
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Running a Traditional-vs-AI comparison">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dashboard-scenario-comparison-screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dashboard — Scenario Comparison screen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cli_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-varying-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Varying conditions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Varying conditions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-time-horizon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Time horizon
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-seed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Seed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-network-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Network configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-interpreting-the-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Interpreting the results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Interpreting the results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kpis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KPIs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reward-learning-curve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reward / learning curve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#events-alarms-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Events &amp; Alarms log
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-test-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Test suite
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="how-to-use-hytwin-usage-guide">How to Use HyTwin — Usage Guide<a class="headerlink" href="#how-to-use-hytwin-usage-guide" title="Permanent link">&para;</a></h1>
+<p>This is the practical, task-oriented companion to the rest of <code>docs/</code>. It
+covers, with copy-pasteable commands and UI steps, both the <strong>dashboard</strong>
+and the <strong>CLI</strong> paths for the four things you'll actually want to do:
+run a network simulation, train an AI agent, compare traditional vs. AI
+control, and interpret the results — including how to vary time horizon,
+seed, and network configuration along the way.</p>
+<p>All CLI snippets below are run from the repository root, with the project's
+virtual environment active.</p>
+<hr />
+<h2 id="1-running-a-network-simulation">1. Running a network simulation<a class="headerlink" href="#1-running-a-network-simulation" title="Permanent link">&para;</a></h2>
+<h3 id="dashboard">Dashboard<a class="headerlink" href="#dashboard" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>-m<span class="w"> </span>dashboard<span class="w"> </span>--speed-factor<span class="w"> </span><span class="m">30</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># then open http://localhost:8060</span>
+</code></pre></div>
+<p>The simulation is <strong>built but paused</strong> on launch. Press <strong>Start</strong> in the
+sidebar to start the clock. The <strong>Overview</strong> screen shows live KPI tiles;
+<strong>Network &amp; Map</strong> shows the animated topology; <strong>Analytics &amp; KPIs</strong> shows
+time-series charts as the run progresses.</p>
+<h3 id="cli">CLI<a class="headerlink" href="#cli" title="Permanent link">&para;</a></h3>
+<p>There's no dedicated "just simulate and watch" CLI entry point for the
+network layer — the CLI path for running a network scenario is through
+<code>compare_controllers</code> (§3 below) or by driving <code>NetworkTwin</code> directly in a
+script, e.g.:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">hytwin.simulation.scenario</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scenario</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">hytwin.network.network_twin</span><span class="w"> </span><span class="kn">import</span> <span class="n">NetworkTwin</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">topo</span> <span class="o">=</span> <span class="n">Scenario</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="s2">&quot;config/italy_network_large.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">topology</span><span class="p">()</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">twin</span> <span class="o">=</span> <span class="n">NetworkTwin</span><span class="p">(</span><span class="n">topo</span><span class="p">,</span> <span class="n">dt_seconds</span><span class="o">=</span><span class="mf">600.0</span><span class="p">)</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">state</span> <span class="o">=</span> <span class="n">twin</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">start_time</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">144</span><span class="p">):</span>   <span class="c1"># 24 hours at dt=600s</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">state</span> <span class="o">=</span> <span class="n">twin</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">total_load_kw</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">total_renewable_kw</span><span class="p">)</span>
+</code></pre></div>
+<p>For a quick sanity check without writing a script, use the comparison
+harness with a single strategy (§3) — it prints KPIs after running the
+network for the requested number of steps.</p>
+<hr />
+<h2 id="2-training-an-ai-rl-agent">2. Training an AI (RL) agent<a class="headerlink" href="#2-training-an-ai-rl-agent" title="Permanent link">&para;</a></h2>
+<h3 id="dashboard-ai-training-screen">Dashboard — AI Training screen<a class="headerlink" href="#dashboard-ai-training-screen" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Go to <strong>AI Training</strong> in the sidebar.</li>
+<li>Set <code>timesteps</code>, <code>n_steps</code> (rollout size), <code>n_envs</code> (parallel workers),
+   and <code>seed</code>; optionally name the run.</li>
+<li>Press <strong>▶ Start training</strong> — the job runs in a background thread on the
+   server. Watch live progress, ETA, and the smoothed learning-curve chart.</li>
+<li>When it completes, open the model list and activate it as the live <code>rl</code>
+   controller (no dashboard restart needed) — the model/topology
+   compatibility check runs automatically and blocks activation with a
+   clear error if the model was trained on a different network.</li>
+</ol>
+<p><strong><code>n_envs</code></strong> (default 4): each worker runs a full simulation in a separate
+process, multiplying sample throughput proportionally. Set it to the number
+of free CPU cores available on the server — 4 gives ~3× speedup over 1.
+GPU (if available) is used automatically by SB3 for the policy update.</p>
+<p>For a long, unattended training run the CLI is more convenient since it is
+not tied to the browser session:</p>
+<h3 id="cli-recommended-for-real-training-runs">CLI — recommended for real training runs<a class="headerlink" href="#cli-recommended-for-real-training-runs" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># default: 200k steps, 4 parallel envs, saves to output/rl_models/net_ppo_large.zip</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>python<span class="w"> </span>-m<span class="w"> </span>train
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># full options</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>python<span class="w"> </span>-m<span class="w"> </span>train<span class="w"> </span>--timesteps<span class="w"> </span><span class="m">500000</span><span class="w"> </span>--n-envs<span class="w"> </span><span class="m">4</span><span class="w"> </span>--n-steps<span class="w"> </span><span class="m">576</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">0</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>python<span class="w"> </span>-m<span class="w"> </span>train<span class="w"> </span>--help
+</code></pre></div>
+<p>To train a <strong>named variant</strong> (kept alongside the default model, selectable
+from the dashboard's model list):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>-m<span class="w"> </span>train<span class="w"> </span>--timesteps<span class="w"> </span><span class="m">500000</span><span class="w"> </span>--save<span class="w"> </span>output/rl_models/net_ppo_v2<span class="w"> </span>--seed<span class="w"> </span><span class="m">1</span>
+</code></pre></div>
+<p>To use the 3-node pilot network for a quick experiment:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>-m<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>config/italy_network_pilot.yaml<span class="w"> </span>--timesteps<span class="w"> </span><span class="m">100000</span>
+</code></pre></div>
+<hr />
+<h2 id="3-running-a-traditional-vs-ai-comparison">3. Running a Traditional-vs-AI comparison<a class="headerlink" href="#3-running-a-traditional-vs-ai-comparison" title="Permanent link">&para;</a></h2>
+<h3 id="dashboard-scenario-comparison-screen">Dashboard — Scenario Comparison screen<a class="headerlink" href="#dashboard-scenario-comparison-screen" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Batch comparison</strong>: pick 2–3 controllers (<code>none</code>/<code>classical</code>/<code>rl</code>),
+  press run — a one-shot comparison over a configurable horizon, with
+  side-by-side KPIs.</li>
+<li><strong>Live lockstep comparison</strong>: the same set of controllers stepped forward
+  together, in real time, on the same seed — useful for watching <em>when</em> and
+  <em>why</em> one strategy diverges from another rather than just the final KPIs.</li>
+</ul>
+<h3 id="cli_1">CLI<a class="headerlink" href="#cli_1" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="s2">from hytwin.simulation.scenario import Scenario</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="s2">from hytwin.network.compare import compare_controllers</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="s2">from hytwin.control.network_rl_controller import NetworkRLController</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="s2">topo = Scenario.from_yaml(&#39;config/italy_network_large.yaml&#39;).topology()</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="s2">out = compare_controllers(topo, steps=1008, seed=42, strategies={</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="s2">    &#39;none&#39;: &#39;none&#39;, &#39;classical&#39;: &#39;classical&#39;,</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="s2">    &#39;rl&#39;: NetworkRLController.factory(&#39;output/rl_models/net_ppo_large&#39;)})</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="s2">for name, kpis in out.items():</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="s2">    print(name, kpis)</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="s2">&quot;</span>
+</code></pre></div>
+<p><code>compare_controllers</code> runs every strategy under <strong>identical conditions</strong>
+(same seed ⇒ same weather/price draw for every site) and returns a
+<code>{strategy_name: kpis_dict}</code> mapping — this is the only fair way to compare
+controllers, since the network's behaviour depends heavily on the weather
+and price draw of the episode.</p>
+<hr />
+<h2 id="4-varying-conditions">4. Varying conditions<a class="headerlink" href="#4-varying-conditions" title="Permanent link">&para;</a></h2>
+<h3 id="41-time-horizon">4.1 Time horizon<a class="headerlink" href="#41-time-horizon" title="Permanent link">&para;</a></h3>
+<p>The <code>steps</code> argument (CLI) — or the horizon selector in the dashboard's
+Scenario Comparison screen — controls how long a run/comparison lasts, at
+<code>dt_seconds=600</code> (10-minute steps) by default:</p>
+<table>
+<thead>
+<tr>
+<th>Horizon</th>
+<th><code>steps</code></th>
+<th>Use for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A few hours</td>
+<td><code>steps=24</code> (4 hours) or similar</td>
+<td>Quick sanity check of a config or a controller change</td>
+</tr>
+<tr>
+<td>One day</td>
+<td><code>steps=144</code></td>
+<td>Standard demo / sanity run</td>
+</tr>
+<tr>
+<td>One week</td>
+<td><code>steps=1008</code></td>
+<td>Statistically meaningful controller comparison — enough variety in weather/price to trust the KPI differences</td>
+</tr>
+<tr>
+<td>One month</td>
+<td><code>steps≈4320</code></td>
+<td>Deeper validation, e.g. before trusting a training result</td>
+</tr>
+</tbody>
+</table>
+<p>Rule of thumb: use a short horizon while iterating on a config or reward
+tweak (fast turnaround), and a week-or-longer horizon for any comparison
+whose numbers you intend to actually trust — a single day can easily be
+dominated by one lucky/unlucky weather draw.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># short check</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">out</span> <span class="o">=</span> <span class="n">compare_controllers</span><span class="p">(</span><span class="n">topo</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">strategies</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">})</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># week-long, trustworthy comparison</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">out</span> <span class="o">=</span> <span class="n">compare_controllers</span><span class="p">(</span><span class="n">topo</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">1008</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">strategies</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">})</span>
+</code></pre></div>
+<h3 id="42-seed">4.2 Seed<a class="headerlink" href="#42-seed" title="Permanent link">&para;</a></h3>
+<p>The <code>seed</code> argument controls the random weather/price draw (and any
+stochastic sensor faults). Two uses:</p>
+<ul>
+<li><strong>Reproducibility</strong>: re-running with the same <code>seed</code> and the same config
+  reproduces the exact same weather, prices, and outcome — use this when
+  debugging a specific run or when you need a stable baseline to compare
+  against across code changes.</li>
+<li><strong>Robustness / exploration</strong>: sweep several seeds to see whether a
+  controller's advantage holds up across different weather/price draws, not
+  just one lucky episode:</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">for</span> <span class="n">seed</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">out</span> <span class="o">=</span> <span class="n">compare_controllers</span><span class="p">(</span><span class="n">topo</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">1008</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>                               <span class="n">strategies</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;classical&quot;</span><span class="p">:</span> <span class="s2">&quot;classical&quot;</span><span class="p">,</span> <span class="s2">&quot;rl&quot;</span><span class="p">:</span> <span class="n">rl_ctrl</span><span class="p">})</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">out</span><span class="p">[</span><span class="s2">&quot;classical&quot;</span><span class="p">],</span> <span class="n">out</span><span class="p">[</span><span class="s2">&quot;rl&quot;</span><span class="p">])</span>
+</code></pre></div>
+<p>A trained agent that only beats the classical controller on one seed is not
+yet trustworthy — check a handful of seeds before believing a training
+result.</p>
+<h3 id="43-network-configuration">4.3 Network configuration<a class="headerlink" href="#43-network-configuration" title="Permanent link">&para;</a></h3>
+<p>Three ways to point at a different (or edited) network, from least to most
+interactive:</p>
+<ol>
+<li><strong>Dashboard Configuration screen</strong> (<code>07_dashboard.md</code> §11): pick a
+   scenario from the dropdown, edit the YAML in the textarea, <strong>Validate &amp;
+   Save</strong>, then <strong>Activate</strong>. Takes effect on the next <code>/sim/reset</code>,
+   training run, or comparison run — never on one already in progress.</li>
+<li><strong><code>--config</code> CLI flag</strong> on the dashboard launcher:
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python<span class="w"> </span>-m<span class="w"> </span>dashboard<span class="w"> </span>--config<span class="w"> </span>config/italy_network_pilot.yaml<span class="w"> </span>--speed-factor<span class="w"> </span><span class="m">30</span>
+</code></pre></div></li>
+<li><strong><code>Scenario.from_yaml(...)</code></strong> pointed at a different file in a script:
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">topo</span> <span class="o">=</span> <span class="n">Scenario</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="s2">&quot;config/italy_network_pilot.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">topology</span><span class="p">()</span>
+</code></pre></div></li>
+</ol>
+<p>To create a genuinely new network (not just re-tune an existing one), copy
+one of the existing scenario files under <code>config/</code>, then follow
+<code>08_configuration_reference.md</code> §3.3 ("How to add a new node") — duplicate
+a <code>- id: ...</code> site block, give it a new id, adjust its equipment and links.
+Per-sensor fault frequency (how often a given sensor misbehaves) is tuned
+via each sensor's <code>fault_probability</code> field — see
+<code>08_configuration_reference.md</code> §7.</p>
+<hr />
+<h2 id="5-interpreting-the-results">5. Interpreting the results<a class="headerlink" href="#5-interpreting-the-results" title="Permanent link">&para;</a></h2>
+<h3 id="kpis">KPIs<a class="headerlink" href="#kpis" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Self-sufficiency</td>
+<td>Fraction of demand met without national-grid import</td>
+</tr>
+<tr>
+<td>Reliability</td>
+<td>Fraction of demand actually met (1 − unmet-demand fraction)</td>
+</tr>
+<tr>
+<td>Renewable fraction</td>
+<td>Share of energy served by wind/PV/H₂-from-renewables vs. grid import</td>
+</tr>
+<tr>
+<td>Average H₂ SOC</td>
+<td>Mean state of charge across all sites' tanks — a healthy controller keeps this near its target band, not draining it to zero</td>
+</tr>
+<tr>
+<td>Cost</td>
+<td>Total network energy cost (€) over the run</td>
+</tr>
+<tr>
+<td>CO₂</td>
+<td>Total grid-import carbon emissions (kg) over the run</td>
+</tr>
+<tr>
+<td>Grid import</td>
+<td>Total energy imported from the national grid across all sites</td>
+</tr>
+<tr>
+<td>Inter-node exchange</td>
+<td>Total energy/H₂ moved between sites over the links — a sign the network topology itself is being used, not just each site's own grid connection</td>
+</tr>
+</tbody>
+</table>
+<h3 id="reward-learning-curve">Reward / learning curve<a class="headerlink" href="#reward-learning-curve" title="Permanent link">&para;</a></h3>
+<p>There is <strong>no fixed "optimal" reward value</strong> — <code>NetworkRewardConfig</code>
+produces an unbounded weighted sum whose achievable range depends on that
+episode's specific weather and price draw (see <code>05_network_layer.md</code> §7).
+Do not compare a raw reward number against a hardcoded target. Instead:</p>
+<ol>
+<li>Compare <strong>relative performance</strong> vs. <code>none</code>/<code>classical</code> on the <strong>same
+   seed</strong>, via <code>compare_controllers</code> — this is the only apples-to-apples
+   comparison.</li>
+<li>When training, watch the <strong>learning curve's smoothed trend</strong> (rising and
+   flattening = converging), not any single episode's reward — the
+   dashboard's AI Training screen and SB3's <code>Monitor</code>-derived
+   <code>info["episode"]</code> records are both built around this trend, not a target
+   value.</li>
+</ol>
+<h3 id="events-alarms-log">Events &amp; Alarms log<a class="headerlink" href="#events-alarms-log" title="Permanent link">&para;</a></h3>
+<p>Each entry names the specific component at fault (site + device id + device
+kind) and the fault kind in plain English — "outlier spike", "stuck reading
+(not updating)", "sensor offline (no data)", "reading drifted from model
+estimate" — with measured vs. model-expected value where available.
+Threshold-crossing conditions (unmet demand, H₂ SOC, price spikes) use a
+dead-band between raise and clear, so one real episode produces one raise
+event and one matching "cleared/recovered" event, not a flood of
+step-by-step re-triggers — a healthy run should show raise/clear pairs, not
+isolated raises that never clear. See <code>07_dashboard.md</code> §9 and
+<code>04_virtual_sensors.md</code> §12 for the full mapping from internal sensor status
+to displayed message.</p>
+<hr />
+<h2 id="6-test-suite">6. Test suite<a class="headerlink" href="#6-test-suite" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-v
+</code></pre></div>
+<p>168 tests, all passing — covering the digital twin, link models, component
+models, network controller, network dashboard, network RL, network
+topology, network twin, RL environment, sensors, and weather/cost realism.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
