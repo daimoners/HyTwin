@@ -48,10 +48,9 @@ hytwin/
 │                       network: block)
 ├── data/                TimeSeriesRecorder (memory + CSV)
 ├── visualization/       Dashboard plots · Sensor comparison plots
-└── dashboard/           FastAPI + WebSocket real-time web dashboards:
-                        network_app.py (multi-node "Network Control Room" —
-                        the primary, recommended dashboard) + a lighter-
-                        weight single-site dashboard (`python -m dashboard`)
+└── dashboard/           FastAPI + WebSocket "Network Control Room" —
+                        real-time multi-site SCADA/EMS web dashboard
+                        (`python -m dashboard`)
 ```
 
 Full design rationale and equations: [`docs/`](docs/index.md), starting
@@ -70,10 +69,14 @@ pip install -r requirements.txt
 pip install -e ".[dev,extras]"
 
 # 2. Launch the multi-node Network Control Room dashboard
-python -m dashboard.network_app --speed-factor 30
+python -m dashboard --speed-factor 30
 # then open http://localhost:8060 and press "Start"
 
-# 3. Or, compare traditional vs. AI control from the CLI
+# 3. Train a PPO agent (4 parallel envs, GPU auto-detected)
+python -m train --timesteps 200000 --n-envs 4
+# python -m train --help  for all options
+
+# 4. Compare traditional vs. AI control from the CLI
 python -c "
 from hytwin.simulation.scenario import Scenario
 from hytwin.network.compare import compare_controllers
@@ -84,7 +87,7 @@ for name, kpis in out.items():
     print(name, kpis)
 "
 
-# 4. Run the test suite
+# 5. Run the test suite
 pytest tests/ -v
 ```
 
@@ -157,7 +160,12 @@ available — see [`docs/04_virtual_sensors.md`](docs/04_virtual_sensors.md).
   seed, and the *trend* of the learning curve, not its absolute value.
 - **Algorithms**: PPO (primary, Stable-Baselines3) for both single-site and
   network envs; SAC/TD3/DDPG also available for the single-site envs.
-- **Training**: `train_network_agent()` (network) / `RLTrainer` (single-site).
+- **Training**: `python -m train` (CLI entry point) / `train_network_agent()`
+  (Python API) / `RLTrainer` (single-site). Supports `n_envs` parallel
+  `SubprocVecEnv` workers for ~3× speedup on multi-core machines; GPU used
+  automatically via `device="auto"`. A `best_model.zip` is saved alongside
+  the timestamped checkpoint whenever the rolling 10-episode mean reward
+  improves — always the highest-reward checkpoint, not just the most recent.
 - **Classical baseline**: `NetworkClassicalController` — a network-aware
   overlay (electric-transport-first, green-H₂-first dispatch) on top of the
   per-site `ClassicalController`, for side-by-side comparison against
@@ -171,7 +179,7 @@ Details and results: [`docs/06_reinforcement_learning.md`](docs/06_reinforcement
 ## Network Control Room dashboard
 
 ```bash
-python -m dashboard.network_app --speed-factor 30
+python -m dashboard --speed-factor 30
 # then open http://localhost:8060
 ```
 
@@ -180,16 +188,19 @@ Italian H₂ network, with 9 screens in the sidebar:
 
 **Overview** (KPI tiles + sparklines) · **Network & Map** (animated
 "big-pixel" tile map of Italy with the real topology's sites/links plotted
-from live lat/lon data; click a node for a live device drawer) ·
+from live lat/lon data; click a node for a live device drawer, click a
+device for its full time-series / health / sensor-quality modal) ·
 **Analytics & KPIs** (KPI history charts) · **Control & AI** (live-switch
 the controller: `none` / `classical` / `rl`, with a live reward-term
-breakdown) · **Scenario Comparison** (batch and live-lockstep
+breakdown; smart AI button popover guides to model library or training when
+no model is active) · **Scenario Comparison** (batch and live-lockstep
 none/classical/rl comparison on identical conditions) · **AI Training**
 (background PPO job with live progress, ETA, and learning-curve chart;
-activate a freshly trained model live, with automatic observation-space
-compatibility validation) · **Events & Alarms** (redesigned: names the
-specific faulty component and fault kind in plain English, dead-banded
-thresholds with explicit clear events) · **Diagnostics** (per-component
+model library shows training-step count for every checkpoint; activate or
+delete models live, with automatic observation-space compatibility
+validation) · **Events & Alarms** (redesigned: names the specific faulty
+component and fault kind in plain English, dead-banded thresholds with
+explicit clear events) · **Diagnostics** (per-component
 health/anomaly/sensor-quality heatmap) · **Configuration** (a scenario YAML
 editor — validated by round-tripping through the real parser before saving;
 this is how you add nodes, edit component parameters, or tune sensor fault
@@ -199,9 +210,6 @@ The simulation is **built but paused** on launch — press **Start** to begin;
 the sidebar always shows an explicit RUNNING / PAUSED state.
 
 Full screen-by-screen reference: [`docs/07_dashboard.md`](docs/07_dashboard.md).
-
-A lighter-weight single-site dashboard remains available via
-`python -m dashboard --config config/advanced_grid.yaml --port 8050`.
 
 ---
 
@@ -264,17 +272,23 @@ useful for a quick, dependency-light look at one subsystem without
 launching the dashboard.
 
 ```bash
-# Multi-node network layer ("grid" mode)
+# Dashboard (Network Control Room)
+python -m dashboard --speed-factor 30          # http://localhost:8060
+
+# RL training (CLI)
+python -m train                                # 200k steps, 4 parallel envs
+python -m train --timesteps 500000 --n-envs 4 # longer run
+python -m train --help                         # full option list
+
+# Multi-node network comparison
 python demos/demo_network.py --config config/italy_network_pilot.yaml --steps 144
 
-# Single-site mode
+# Single-site demos
 python demos/demo_simulation.py --plot
 python demos/demo_sensors.py --plot
-python demos/demo_digital_twin.py --plot
 python demos/demo_rl_training.py --timesteps 20000 --plot
 python demos/demo_advanced.py --mode simulate --steps 144
 python demos/demo_advanced.py --mode compare --steps 144
-python demos/demo_advanced.py --mode train_rl --timesteps 100000
 ```
 
 ---

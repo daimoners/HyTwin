@@ -464,8 +464,40 @@ function go(id){S.screen=id;document.querySelectorAll('.navitem').forEach(x=>x.c
 
 function buildCtrlSeg(){const seg=$('#ctrlseg');seg.innerHTML='';
   const labels={none:'None',classical:'Traditional',rl:'AI (RL)'};
-  (S.topo.controllers||['none','classical']).forEach(c=>{const b=ce('button',c==='classical'?'on':'',labels[c]||c);
-    b.dataset.c=c;b.onclick=()=>{document.querySelectorAll('#ctrlseg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');api('/control',{type:c});};seg.appendChild(b);});}
+  // Always show all three buttons; rl may need a model to be selected first.
+  ['none','classical','rl'].forEach(c=>{
+    const b=ce('button',c==='classical'?'on':'',labels[c]||c);
+    b.dataset.c=c;
+    b.onclick=()=>{
+      if(c==='rl' && !S.topo.rl_available){
+        _showRlPopover(b, S.topo.rl_has_models);
+        return;
+      }
+      document.querySelectorAll('#ctrlseg button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      api('/control',{type:c});
+    };
+    seg.appendChild(b);
+  });
+}
+
+function _showRlPopover(anchor, hasModels){
+  let pop=document.getElementById('__rl_pop');
+  if(!pop){
+    pop=document.createElement('div');pop.id='__rl_pop';
+    pop.style.cssText='position:fixed;z-index:9999;background:var(--panel2);border:1.5px solid var(--teal);border-radius:10px;padding:16px 20px;max-width:320px;box-shadow:0 4px 24px #0006;font-size:13px;line-height:1.5';
+    document.body.appendChild(pop);
+    document.addEventListener('click',e=>{if(!pop.contains(e.target)&&e.target!==anchor)pop.style.display='none';},{capture:true});
+  }
+  const msg=hasModels
+    ? `<b style="color:var(--teal)">Select a trained model</b><br>Go to <b>AI Training → Model library</b>, choose a model and click <b>Activate</b>, then return here.`
+    : `<b style="color:var(--teal)">No model available</b><br>Go to <b>AI Training</b> and run a training job first.<br><span style="color:var(--muted);font-size:11px">CLI: <code>python -m train --timesteps 200000</code></span>`;
+  pop.innerHTML=msg;
+  const r=anchor.getBoundingClientRect();
+  pop.style.display='block';
+  pop.style.top=(r.bottom+8)+'px';
+  pop.style.left=Math.max(8,r.left-pop.offsetWidth/2+anchor.offsetWidth/2)+'px';
+}
 
 // ---------- map ----------
 // More accurate coastlines (traced in lon/lat, projected identically to nodes)
@@ -698,8 +730,9 @@ function statusOf(n){if(n.unmet_kw>0.1||!n.grid_available)return'alarm';if(n.h2_
 function render(){
   if(S.screen==='training')renderTraining();
   if(S.screen==='config')renderConfig();
+  if(S.screen==='comparison')renderComparison();
   if(!S.frame)return;
-  const f=S.frame,r={overview:renderOverview,network:renderNetwork,analytics:renderAnalytics,control:renderControl,comparison:renderComparison,events:renderEvents,diag:renderDiag}[S.screen];
+  const f=S.frame,r={overview:renderOverview,network:renderNetwork,analytics:renderAnalytics,control:renderControl,events:renderEvents,diag:renderDiag}[S.screen];
   if(r)r(f);
 }
 
@@ -809,7 +842,7 @@ function renderControl(f){const el=$('#s-control');const obj=f.objective||{};
       ${bar('Fuel cell',a.fc_setpoint_kw||0,n.fuel_cell_kw,'var(--fc)')}
       <div style="font-size:11px;color:var(--muted);margin-top:4px">Demand response: ${((a.dr||0)*100).toFixed(0)}%</div>`;cs.appendChild(row);});}
 
-function renderComparison(f){const el=$('#s-comparison');
+function renderComparison(){const el=$('#s-comparison');
   if(el.dataset.built){return;}
   el.dataset.built='1';
   el.innerHTML=`
@@ -996,12 +1029,14 @@ function renderTraining(){const el=$('#s-training');
         <div class="formgrid">
           <label class="field">Total steps (timesteps)<input type="number" id="tr-steps" value="60000" min="1000" step="1000" style="width:110px"></label>
           <label class="field">Rollout (n_steps)<input type="number" id="tr-nsteps" value="576" min="64" step="32" style="width:90px"></label>
+          <label class="field" title="Parallel simulation workers — higher values speed up sample collection proportionally (one process per CPU core; 4 is a good default)">Parallel envs (n_envs)<input type="number" id="tr-nenvs" value="4" min="1" max="16" step="1" style="width:70px"></label>
           <label class="field">Seed<input type="number" id="tr-seed" value="0" style="width:70px"></label>
           <label class="field">Name (optional)<input type="text" id="tr-name" placeholder="auto" style="width:150px"></label>
         </div>
         <div class="muted" style="font-size:11px;margin-top:10px">
-          Estimate: ~60–90 min per 100k steps on a consumer CPU. You can stop at any time —
-          the model is still saved with the progress reached so far.
+          <b>Parallel envs:</b> each worker runs a full simulation on a separate CPU core — 4 workers
+          give ~3× speedup over 1. GPU (if available) is used automatically for the policy update.
+          You can stop at any time — the model is saved with the progress reached so far.
         </div>
         <div style="margin-top:12px;display:flex;gap:8px">
           <button class="primary" id="tr-start">▶ Start training</button>
@@ -1043,6 +1078,7 @@ function renderTraining(){const el=$('#s-training');
 
 function trainStart(){
   const body={timesteps:+$('#tr-steps').value,n_steps:+$('#tr-nsteps').value,
+    n_envs:+$('#tr-nenvs').value,
     seed:+$('#tr-seed').value,name:$('#tr-name').value||undefined};
   $('#tr-result').innerHTML='';
   fetch('/api/train/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
@@ -1135,14 +1171,17 @@ function refreshModels(){
       const incompatible=m.compatible===false;
       const row=ce('div','modelrow'+(active?' active':''));
       const sitesTag=m.n_sites?`<span class="tag" style="margin-left:6px">${m.n_sites} nodes</span>`:'';
+      const stepsTag=m.timesteps_completed?`<span class="tag" style="margin-left:6px;background:var(--panel3)">${fmt(m.timesteps_completed,0)} steps</span>`:'';
       let action;
       if(active)action='<span class="tag active">active</span>';
       else if(incompatible)action=`<span class="tag" style="background:var(--red);color:#2a0a0a" title="Trained for a topology different from the active network">incompatible</span>`;
       else action='<button data-p="'+m.path+'">Activate</button>';
-      row.innerHTML=`<div style="flex:1"><div class="mname">${m.name}${sitesTag}</div>
-        <div class="mmeta">${m.trained_at?fmtFullDate(m.trained_at)+' · '+fmt(m.timesteps_completed,0)+' steps'+(m.stopped_early?' (stopped early)':''):fmtFullDate(m.mtime)+' · '+m.size_kb+' KB'}</div></div>
-        ${action}`;
-      if(!active&&!incompatible)row.querySelector('button').onclick=()=>selectModel(m.path);
+      row.innerHTML=`<div style="flex:1"><div class="mname">${m.name}${sitesTag}${stepsTag}</div>
+        <div class="mmeta">${m.trained_at?fmtFullDate(m.trained_at)+(m.stopped_early?' (stopped early)':''):fmtFullDate(m.mtime)+' · '+m.size_kb+' KB'}</div></div>
+        ${action}
+        <button class="del-btn" title="Delete this model" style="margin-left:6px;background:transparent;border:1px solid var(--red);color:var(--red);padding:3px 8px;font-size:11px;border-radius:var(--r-sm);cursor:pointer" data-p="${m.path}">🗑</button>`;
+      if(!active&&!incompatible)row.querySelector('button[data-p]').onclick=()=>selectModel(m.path);
+      row.querySelector('.del-btn').onclick=()=>confirmDeleteModel(m.path,m.name);
       box.appendChild(row);
     });
   });
@@ -1152,6 +1191,31 @@ window.selectModel=function(path){
     .then(async r=>{
       const d=await r.json();
       if(!r.ok){alert(d.detail||'Could not activate the model.');return;}
+      refreshModels();buildCtrlSeg();
+    }).catch(e=>alert('Network error: '+e));
+};
+window.confirmDeleteModel=function(path,name){
+  let pop=document.getElementById('__del_pop');
+  if(!pop){
+    pop=document.createElement('div');pop.id='__del_pop';
+    pop.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6)';
+    document.body.appendChild(pop);
+  }
+  pop.innerHTML=`<div style="background:var(--panel2);border:1.5px solid var(--red);border-radius:12px;padding:28px 32px;max-width:420px;text-align:center">
+    <div style="font-size:16px;font-weight:700;color:var(--red);margin-bottom:10px">Delete model?</div>
+    <div style="font-size:13px;color:var(--txt);margin-bottom:20px">This will permanently delete <b style="font-family:var(--f-mono)">${name}</b> and its sidecar metadata. This action cannot be undone.</div>
+    <div style="display:flex;gap:12px;justify-content:center">
+      <button onclick="document.getElementById('__del_pop').style.display='none'" style="padding:7px 20px">Cancel</button>
+      <button class="primary" style="background:var(--red);border-color:var(--red);padding:7px 20px" onclick="deleteModel('${path}')">Delete</button>
+    </div></div>`;
+  pop.style.display='flex';
+};
+window.deleteModel=function(path){
+  const pop=document.getElementById('__del_pop');if(pop)pop.style.display='none';
+  fetch('/api/models/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path})})
+    .then(async r=>{
+      const d=await r.json();
+      if(!r.ok){alert(d.detail||'Could not delete the model.');return;}
       refreshModels();buildCtrlSeg();
     }).catch(e=>alert('Network error: '+e));
 };

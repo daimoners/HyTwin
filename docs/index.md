@@ -32,7 +32,7 @@ If you only read one document beyond this index, read
 
 ```bash
 # Network Control Room dashboard (recommended)
-python -m dashboard.network_app --speed-factor 30
+python -m dashboard --speed-factor 30
 # then open http://localhost:8060
 
 # Compare traditional vs. AI control from the CLI

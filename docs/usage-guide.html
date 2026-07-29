@@ -61,7 +61,7 @@
 
     <h2 id="run">9.1 Running a Network Simulation</h2>
     <h3>Dashboard</h3>
-    <pre><code>python -m dashboard.network_app --speed-factor 30
+    <pre><code>python -m dashboard --speed-factor 30
 # then open http://localhost:8060</code></pre>
     <p>The simulation is <strong>built but paused</strong> on launch.
        Press <strong>Start</strong> in the sidebar to start the clock.
@@ -116,13 +116,7 @@ for i in range(144):   # 24 hours at dt=600s
        CLI:</p>
 
     <h3>CLI — recommended for real training runs</h3>
-    <pre><code>python -c "
-from hytwin.simulation.scenario import Scenario
-from hytwin.rl.network_trainer import train_network_agent
-topo = Scenario.from_yaml('config/italy_network_large.yaml').topology()
-train_network_agent(topo, timesteps=200000, save_path='output/rl_models/net_ppo_large',
-                     seed=0, n_steps=576)
-"</code></pre>
+    <pre><code>python -m train --timesteps 200000 --n-envs 4 --seed 0</code></pre>
     <p>This overwrites <code>output/rl_models/net_ppo_large.zip</code>,
        which is the network dashboard's default <code>rl</code> model
        (<code>--rl-model</code> flag). To train a <strong>named
@@ -130,13 +124,7 @@ train_network_agent(topo, timesteps=200000, save_path='output/rl_models/net_ppo_
        selectable from the dashboard's model list without overwriting
        anything — just change <code>save_path</code> and
        <code>seed</code>:</p>
-    <pre><code>python -c "
-from hytwin.simulation.scenario import Scenario
-from hytwin.rl.network_trainer import train_network_agent
-topo = Scenario.from_yaml('config/italy_network_large.yaml').topology()
-train_network_agent(topo, timesteps=200000,
-                     save_path='output/rl_models/net_ppo_v3', seed=1, n_steps=576)
-"</code></pre>
+    <pre><code>python -m train  # see --help for all options</code></pre>
 
     <h2 id="compare">9.3 Running a Traditional-vs-AI Comparison</h2>
     <h3>Dashboard — Scenario Comparison screen</h3>
@@ -232,7 +220,7 @@ out = compare_controllers(topo, steps=1008, seed=42, strategies={...})</code></p
           never on one already in progress.</li>
       <li><strong><code>--config</code> CLI flag</strong> on the
           dashboard launcher:
-          <pre><code>python -m dashboard.network_app --config config/italy_network_pilot.yaml --speed-factor 30</code></pre>
+          <pre><code>python -m dashboard --config config/italy_network_pilot.yaml --speed-factor 30</code></pre>
       </li>
       <li><strong><code>Scenario.from_yaml(...)</code></strong> pointed
           at a different file in a script:

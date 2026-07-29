@@ -43,6 +43,33 @@ DEFAULT_CONFIG = str(ROOT / "config" / "italy_network_large.yaml")
 DEFAULT_RL_MODEL = str(ROOT / "output" / "rl_models" / "net_ppo_large")
 
 
+def _read_model_steps(p: Path) -> int:
+    """Read num_timesteps from a SB3 zip without loading the policy weights."""
+    try:
+        import zipfile as _zf
+        with _zf.ZipFile(p) as z:
+            if "data" in z.namelist():
+                return int(json.loads(z.read("data")).get("num_timesteps", 0))
+    except Exception:  # noqa: BLE001
+        pass
+    return 0
+
+
+def _resolve_rl_model(path: str) -> str:
+    """Return *path* if the .zip exists; otherwise auto-discover the model with
+    the highest number of training steps in the same directory."""
+    if Path(str(path) + ".zip").exists():
+        return path
+    model_dir = Path(path).parent
+    candidates = list(model_dir.glob("*.zip"))
+    if not candidates:
+        return path
+    best = max(candidates, key=_read_model_steps)
+    best_stem = str(best.with_suffix(""))
+    logger.info("RL model auto-discovered (most steps): %s", best_stem)
+    return best_stem
+
+
 # ============================================================================
 # Component presentation mapping (device-appropriate metrics)
 # ============================================================================
@@ -156,8 +183,8 @@ class NetworkSimulationWorker:
         self._dt = dt_seconds
         self._speed_factor = speed_factor
         self._seed = seed
-        self._rl_model_path = rl_model_path
-        self._rl_available = Path(str(rl_model_path) + ".zip").exists()
+        self._rl_model_path = _resolve_rl_model(rl_model_path)
+        self._rl_available = Path(str(self._rl_model_path) + ".zip").exists()
         self._q: queue.Queue = queue.Queue(maxsize=queue_maxsize)
         self._running = threading.Event()
         self._stop = threading.Event()
@@ -226,8 +253,9 @@ class NetworkSimulationWorker:
                  "length_km": round(link.length_km or 0.0, 1)}
                 for lid, link in self._topo.links.items()
             ],
-            "controllers": ["none", "classical"] + (["rl"] if self._rl_available else []),
+            "controllers": ["none", "classical", "rl"],
             "rl_available": self._rl_available,
+            "rl_has_models": bool(list(Path(self._rl_model_path).parent.glob("*.zip"))),
             "rl_model_path": self._rl_model_path,
             "dt_seconds": self._dt,
             "start_time": self._sim_ts.isoformat(),
@@ -257,9 +285,9 @@ class NetworkSimulationWorker:
         self._rl_available = Path(str(path) + ".zip").exists()
         self._rl = None  # force reload on next use
         if self._topology_payload:
-            controllers = ["none", "classical"] + (["rl"] if self._rl_available else [])
-            self._topology_payload["controllers"] = controllers
+            self._topology_payload["controllers"] = ["none", "classical", "rl"]
             self._topology_payload["rl_available"] = self._rl_available
+            self._topology_payload["rl_has_models"] = bool(list(Path(path).parent.glob("*.zip")))
             self._topology_payload["rl_model_path"] = self._rl_model_path
 
     def rl_model_path(self) -> str:
@@ -640,12 +668,14 @@ def list_models(model_dir: Path, expected_obs_dim: Optional[int] = None) -> List
         obs_dim, act_dim = _model_dims(p, meta)
         n_sites = meta.get("n_sites") or (infer_n_sites_from_obs_dim(obs_dim) if obs_dim else None)
         compatible = (obs_dim == expected_obs_dim) if (obs_dim and expected_obs_dim) else None
+        # steps: prefer sidecar JSON, fall back to reading from zip internals
+        steps = meta.get("timesteps_completed") or _read_model_steps(p)
         out.append({
             "name": p.stem,
             "path": str(p.with_suffix("")),
             "mtime": datetime.fromtimestamp(p.stat().st_mtime).isoformat(),
             "size_kb": round(p.stat().st_size / 1024.0, 1),
-            "timesteps_completed": meta.get("timesteps_completed"),
+            "timesteps_completed": steps or None,
             "trained_at": meta.get("trained_at"),
             "stopped_early": meta.get("stopped_early"),
             "has_metadata": bool(meta),
@@ -888,7 +918,7 @@ class TrainingWorker:
         self._config_path = config_path
 
     def start(self, timesteps: int, n_steps: int = 576, name: Optional[str] = None,
-              seed: int = 0) -> Dict[str, Any]:
+              seed: int = 0, n_envs: int = 1) -> Dict[str, Any]:
         with self._lock:
             if self._thread is not None and self._thread.is_alive():
                 raise RuntimeError("A training job is already running.")
@@ -899,10 +929,12 @@ class TrainingWorker:
                 "total_steps": int(timesteps), "elapsed_s": 0.0, "eta_s": None,
                 "save_path": None, "error": None, "name": run_name,
                 "started_at": datetime.utcnow().isoformat() + "Z",
+                "n_envs": int(n_envs),
             }
             self._reward_history = []
             self._thread = threading.Thread(
-                target=self._run, args=(int(timesteps), int(n_steps), run_name, int(seed)),
+                target=self._run,
+                args=(int(timesteps), int(n_steps), run_name, int(seed), int(n_envs)),
                 daemon=True,
             )
             self._thread.start()
@@ -918,7 +950,7 @@ class TrainingWorker:
                 d["reward_history"] = list(self._reward_history)
             return d
 
-    def _run(self, timesteps: int, n_steps: int, run_name: str, seed: int) -> None:
+    def _run(self, timesteps: int, n_steps: int, run_name: str, seed: int, n_envs: int = 1) -> None:
         try:
             from stable_baselines3.common.callbacks import BaseCallback
             from hytwin.simulation.scenario import Scenario
@@ -968,7 +1000,7 @@ class TrainingWorker:
             save_path = str(self._model_dir / run_name)
             model = train_network_agent(
                 topo, timesteps=timesteps, save_path=save_path, seed=seed,
-                n_steps=n_steps, callback=_ProgressCallback(),
+                n_steps=n_steps, n_envs=n_envs, callback=_ProgressCallback(),
             )
             stopped_early = self._stop_flag.is_set()
             meta = {
@@ -1188,6 +1220,21 @@ def create_app(
         worker.set_rl_model(path)
         return {"status": "ok", "active": path}
 
+    @app.post("/api/models/delete")
+    async def api_models_delete(body: dict):
+        path = body.get("path")
+        if not path:
+            raise HTTPException(status_code=400, detail="path required")
+        zip_path = Path(path + ".zip")
+        if not zip_path.exists():
+            raise HTTPException(status_code=404, detail=f"Model not found: {path}")
+        # Deactivate if this model is currently active
+        if worker.rl_model_path() == path:
+            worker.set_rl_model(str(zip_path.parent / "net_ppo_large"))  # reset to default
+        zip_path.unlink(missing_ok=True)
+        Path(path + ".json").unlink(missing_ok=True)  # remove sidecar if present
+        return {"status": "deleted", "path": path}
+
     # ------------------------------------------------------------------
     # Training mode — launch/monitor/stop a background PPO training job
     # ------------------------------------------------------------------
@@ -1196,10 +1243,12 @@ def create_app(
     async def train_start(body: dict):
         timesteps = int(body.get("timesteps", 20000))
         n_steps = int(body.get("n_steps", 576))
+        n_envs = int(body.get("n_envs", 1))
         name = body.get("name") or None
         seed_ = int(body.get("seed", 0))
         try:
-            st = training_worker.start(timesteps, n_steps=n_steps, name=name, seed=seed_)
+            st = training_worker.start(timesteps, n_steps=n_steps, name=name, seed=seed_,
+                                       n_envs=n_envs)
         except RuntimeError as e:
             raise HTTPException(status_code=409, detail=str(e))
         return st

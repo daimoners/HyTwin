@@ -178,13 +178,7 @@ env = NetworkH2GridEnv(topo, dt_seconds=600.0, episode_steps=144,
        <code>italy_network_pilot.yaml</code>.</p>
 
     <h3>Training from the CLI</h3>
-    <pre><code>python -c "
-from hytwin.simulation.scenario import Scenario
-from hytwin.rl.network_trainer import train_network_agent
-topo = Scenario.from_yaml('config/italy_network_large.yaml').topology()
-train_network_agent(topo, timesteps=200000, save_path='output/rl_models/net_ppo_large',
-                     seed=0, n_steps=576)
-"</code></pre>
+    <pre><code>python -m train --timesteps 200000 --n-envs 4 --seed 0</code></pre>
     <p><code>train_network_agent(topology, timesteps, dt_seconds,
        episode_steps, save_path, seed, n_steps, reward_config, verbose,
        callback)</code> wraps SB3's PPO with a <code>Monitor</code>

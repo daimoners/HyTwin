@@ -352,7 +352,7 @@ required field is missing.
 
 ```bash
 # Dashboard
-python -m dashboard.network_app --config config/italy_network_pilot.yaml --speed-factor 30
+python -m dashboard --config config/italy_network_pilot.yaml --speed-factor 30
 
 # CLI / Python
 from hytwin.simulation.scenario import Scenario

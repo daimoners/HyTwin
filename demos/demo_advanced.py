@@ -18,14 +18,14 @@ Modes
   simulate   — run one simulation with classical control and print KPIs
   train_rl   — train a PPO agent then evaluate it (saves model)
   compare    — run Classical vs RL side by side, print comparison table
-  dashboard  — start the real-time web dashboard (imports dashboard.app)
+  dashboard  — start the Network Control Room dashboard (multi-site)
 
 Usage examples
 --------------
   python demos/demo_advanced.py --mode simulate --steps 144
   python demos/demo_advanced.py --mode train_rl --timesteps 100000
   python demos/demo_advanced.py --mode compare --steps 144
-  python demos/demo_advanced.py --mode dashboard --port 8050
+  python demos/demo_advanced.py --mode dashboard --port 8060
   python demos/demo_advanced.py --mode simulate --speed-factor 60
 """
 from __future__ import annotations
@@ -540,14 +540,14 @@ def _print_comparison_table(
 
 def mode_dashboard(args: argparse.Namespace) -> None:
     try:
-        import importlib
-        dashboard_app = importlib.import_module("dashboard.app")
-        dashboard_app.run(
-            config_path=args.config,
+        from dashboard.network_app import run_network_dashboard, DEFAULT_CONFIG, DEFAULT_RL_MODEL
+        run_network_dashboard(
+            config_path=args.config or DEFAULT_CONFIG,
             dt_seconds=args.dt,
             speed_factor=args.speed_factor,
             port=args.port,
             seed=args.seed,
+            rl_model_path=DEFAULT_RL_MODEL,
         )
     except ImportError as e:
         print(f"[ERROR] Dashboard dependencies missing: {e}")

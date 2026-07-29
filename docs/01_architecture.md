@@ -114,10 +114,11 @@ hytwin/
 │
 └── dashboard/
     ├── network_app.py       # FastAPI + WebSocket — Network Control Room
-    ├── app.py                # Legacy single-site dashboard
+    ├── __init__.py           # Re-exports from network_app
+    ├── app.py                # Compatibility re-export shim
     └── static/
         ├── network.html      # Network Control Room UI
-        └── index.html        # Legacy single-site UI
+        └── index.html        # Static assets
 ```
 
 ---
@@ -211,7 +212,7 @@ ts = clock.tick()   # advances by dt, returns the new timestamp
 
 `speed_factor=0.0` runs the simulation at maximum speed (wall-clock is
 ignored). Values > 0 slow it down for real-time dashboard playback — this is
-the `--speed-factor` flag used by `dashboard.network_app`.
+the `--speed-factor` flag used by `python -m dashboard`.
 
 ---
 

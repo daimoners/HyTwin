@@ -2,16 +2,12 @@
 
 ## 1. Overview
 
-`dashboard/network_app.py` serves a **FastAPI + WebSocket** real-time web
-dashboard — the "Network Control Room" — that runs, monitors, and controls
-the full multi-site network simulation from a browser. It is the primary,
-recommended way to operate HyTwin. A lighter-weight single-site dashboard
-(`dashboard/app.py`, served at `dashboard/static/index.html`) is still
-reachable via `python -m dashboard`, but everything in this document
-targets the Network Control Room.
+The **Network Control Room** is a **FastAPI + WebSocket** real-time web
+dashboard that runs, monitors, and controls the full multi-site network
+simulation from a browser. It is the only dashboard entry point in HyTwin.
 
 ```bash
-python -m dashboard.network_app --speed-factor 30
+python -m dashboard --speed-factor 30
 # then open http://localhost:8060
 ```
 
@@ -108,12 +104,17 @@ modes:
 ## 8. AI Training
 
 Launches a **background PPO training job** (`POST /api/train/start`, body:
-`timesteps`, `n_steps`, `seed`, optional `name`) with live progress and ETA
-(`GET /api/train/status`), and a **learning-curve chart**: the smoothed
-episode-reward trend sourced from SB3's `Monitor` wrapper's per-episode
-`info["episode"]` records (see `06_reinforcement_learning.md` §7 on why the
-*trend*, not the absolute value, is the signal to read). `POST
-/api/train/stop` aborts a running job.
+`timesteps`, `n_steps`, `seed`, `n_envs`, optional `name`) with live
+progress and ETA (`GET /api/train/status`), and a **learning-curve chart**:
+the smoothed episode-reward trend sourced from SB3's `Monitor` wrapper's
+per-episode `info["episode"]` records (see `06_reinforcement_learning.md`
+§7 on why the *trend*, not the absolute value, is the signal to read).
+`POST /api/train/stop` aborts a running job.
+
+During training, a `best_model.zip` is saved automatically alongside the
+timestamped checkpoint whenever the rolling 10-episode mean reward improves
+— this is always the highest-reward checkpoint, not just the most recent
+one.
 
 Once a job completes, the freshly trained model can be **activated as the
 live `rl` controller without restarting the dashboard**
@@ -125,6 +126,23 @@ dimensionality and compares it against the currently active network's
 how many sites the model was trained for vs. how many the active network
 has, preventing a shape-mismatch crash from ever reaching the live
 controller.
+
+### Model library
+
+Each row in the model library shows:
+- Model name (filename stem) and **number of training steps** (read directly
+  from the SB3 zip metadata, so it works even for models trained via the
+  CLI without a sidecar JSON file).
+- Activation button (disabled for the currently active model or for
+  incompatible topologies, with a tooltip explaining why).
+- **🗑 Delete button** — opens a confirmation dialog naming the model, then
+  calls `POST /api/models/delete` which removes the `.zip` and its `.json`
+  sidecar. If the deleted model is currently active, the controller falls
+  back to the default path.
+
+Auto-discovery (`--rl-model` auto-mode) picks the model with the **most
+training steps** from the model directory, not the most recently modified
+file.
 
 For a real (long) training run, prefer the CLI (`06_reinforcement_learning.md`
 §4) — a dashboard-launched job is tied to the server process but not to any

@@ -17,7 +17,7 @@ virtual environment active.
 ### Dashboard
 
 ```bash
-python -m dashboard.network_app --speed-factor 30
+python -m dashboard --speed-factor 30
 # then open http://localhost:8060
 ```
 
@@ -57,45 +57,45 @@ network for the requested number of steps.
 ### Dashboard — AI Training screen
 
 1. Go to **AI Training** in the sidebar.
-2. Set `timesteps`, `n_steps` (rollout size), and `seed`; optionally name
-   the run.
-3. Press start — the job runs in a background thread on the server. Watch
-   live progress, ETA, and the smoothed learning-curve chart.
+2. Set `timesteps`, `n_steps` (rollout size), `n_envs` (parallel workers),
+   and `seed`; optionally name the run.
+3. Press **▶ Start training** — the job runs in a background thread on the
+   server. Watch live progress, ETA, and the smoothed learning-curve chart.
 4. When it completes, open the model list and activate it as the live `rl`
    controller (no dashboard restart needed) — the model/topology
    compatibility check runs automatically and blocks activation with a
    clear error if the model was trained on a different network.
 
-This is convenient for short/exploratory runs, but a dashboard-launched job
-still runs on the server process, not the browser tab — for a long,
-unattended training run, prefer the CLI:
+**`n_envs`** (default 4): each worker runs a full simulation in a separate
+process, multiplying sample throughput proportionally. Set it to the number
+of free CPU cores available on the server — 4 gives ~3× speedup over 1.
+GPU (if available) is used automatically by SB3 for the policy update.
+
+For a long, unattended training run the CLI is more convenient since it is
+not tied to the browser session:
 
 ### CLI — recommended for real training runs
 
 ```bash
-python -c "
-from hytwin.simulation.scenario import Scenario
-from hytwin.rl.network_trainer import train_network_agent
-topo = Scenario.from_yaml('config/italy_network_large.yaml').topology()
-train_network_agent(topo, timesteps=200000, save_path='output/rl_models/net_ppo_large',
-                     seed=0, n_steps=576)
-"
+# default: 200k steps, 4 parallel envs, saves to output/rl_models/net_ppo_large.zip
+python -m train
+
+# full options
+python -m train --timesteps 500000 --n-envs 4 --n-steps 576 --seed 0
+python -m train --help
 ```
 
-This overwrites `output/rl_models/net_ppo_large.zip`, which is the network
-dashboard's default `rl` model (`--rl-model` flag). To train a **named
-variant** instead — kept alongside the existing one, selectable from the
-dashboard's model list without overwriting anything — just change
-`save_path` and `seed`:
+To train a **named variant** (kept alongside the default model, selectable
+from the dashboard's model list):
 
 ```bash
-python -c "
-from hytwin.simulation.scenario import Scenario
-from hytwin.rl.network_trainer import train_network_agent
-topo = Scenario.from_yaml('config/italy_network_large.yaml').topology()
-train_network_agent(topo, timesteps=200000,
-                     save_path='output/rl_models/net_ppo_v3', seed=1, n_steps=576)
-"
+python -m train --timesteps 500000 --save output/rl_models/net_ppo_v2 --seed 1
+```
+
+To use the 3-node pilot network for a quick experiment:
+
+```bash
+python -m train --config config/italy_network_pilot.yaml --timesteps 100000
 ```
 
 ---
@@ -197,7 +197,7 @@ interactive:
    training run, or comparison run — never on one already in progress.
 2. **`--config` CLI flag** on the dashboard launcher:
    ```bash
-   python -m dashboard.network_app --config config/italy_network_pilot.yaml --speed-factor 30
+   python -m dashboard --config config/italy_network_pilot.yaml --speed-factor 30
    ```
 3. **`Scenario.from_yaml(...)`** pointed at a different file in a script:
    ```python

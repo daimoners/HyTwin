@@ -31,8 +31,11 @@ experiments/**/output/
 *.zip
 *.tb_logs/
 
-# --- Internal / non-public project documents ---
+# --- Private / non-public tools (kept outside the repo) ---
+# e.g. automated video recorder scripts, internal benchmarking scripts
 doc_reports/
+demos/demo_video.py
+private/
 
 # --- Editor / OS ---
 .vscode/
