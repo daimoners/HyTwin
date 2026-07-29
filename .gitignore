@@ -37,6 +37,9 @@ doc_reports/
 demos/demo_video.py
 private/
 
+# --- MkDocs build output ---
+site/
+
 # --- Editor / OS ---
 .vscode/
 .idea/

@@ -8,6 +8,8 @@ docs_dir: docs
 
 theme:
   name: material
+  logo: logo.png
+  favicon: logo.png
   palette:
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
@@ -32,15 +34,22 @@ theme:
 
 markdown_extensions:
   - tables
-  - fenced_code
   - admonition
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
-  - toc:
-      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 nav:
   - Overview: index.md
